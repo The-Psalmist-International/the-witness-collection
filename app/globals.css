@@ -1,3 +1,16 @@
 @import "tailwindcss";
 
+@theme {
+  --font-stack-sans: var(--font-stack-sans-headline), var(--font-geist-sans), sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: #000;
+    color: #fff;
+    font-family: var(--font-stack-sans);
+  }
+}
+
+
 

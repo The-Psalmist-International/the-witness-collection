@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Stack_Sans_Headline } from "next/font/google";
 import "./globals.css";
+import { LenisProvider } from "./components/LenisProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -10,6 +11,11 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const stackSansHeadline = Stack_Sans_Headline({
+  subsets: ["latin"],
+  variable: "--font-stack-sans-headline",
 });
 
 export const metadata: Metadata = {
@@ -25,9 +31,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${stackSansHeadline.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col font-stack-sans">
+        <LenisProvider>{children}</LenisProvider>
+      </body>
     </html>
   );
 }
