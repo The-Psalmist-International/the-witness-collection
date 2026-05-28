@@ -3,8 +3,26 @@
 import { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { ProductsSection } from "./components/ProductsSection";
+import { ProductsSection, DEFAULT_PRODUCTS } from "./components/ProductsSection";
 import { CategoriesSection } from "./components/CategoriesSection";
+import { FaqSection } from "./components/FaqSection";
+import { CtaSection } from "./components/CtaSection";
+import { FooterSection } from "./components/FooterSection";
+import { PromoBanner, HeaderContent } from "./components/Navbar";
+
+const PRODUCTS_GROUP_1 = DEFAULT_PRODUCTS;
+const PRODUCTS_GROUP_2 = [
+  { ...DEFAULT_PRODUCTS[3], id: "5", name: "The Lamb Hoodie", price: "GHS 450", image: "/EOSR1120.jpg", hoverImage: "/LambWhite.png" },
+  { ...DEFAULT_PRODUCTS[2], id: "6", name: "Mystic Crewneck", price: "GHS 400" },
+  { ...DEFAULT_PRODUCTS[1], id: "7", name: "Blow Up Long Sleeve", price: "GHS 350" },
+  { ...DEFAULT_PRODUCTS[0], id: "8", name: "Bonjour Beanie", price: "GHS 150" },
+];
+const PRODUCTS_GROUP_3 = [
+  { ...DEFAULT_PRODUCTS[1], id: "9", name: "Blow Up Cap", price: "GHS 120", image: "/EOSR1279.jpg", hoverImage: "/EOSR1055.jpg" },
+  { ...DEFAULT_PRODUCTS[0], id: "10", name: "Bonjour Tote", price: "GHS 180" },
+  { ...DEFAULT_PRODUCTS[3], id: "11", name: "The Lamb Socks", price: "GHS 80" },
+  { ...DEFAULT_PRODUCTS[2], id: "12", name: "Classic Mystic Pin", price: "GHS 50" },
+];
 
 export default function Home() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -78,26 +96,31 @@ export default function Home() {
       <motion.div
         ref={scrollContainerRef}
         data-lenis-prevent
-        className="fixed inset-0 z-50 bg-[#ffffff] text-black flex flex-col overflow-y-auto pb-4 md:pb-6 lg:pb-8"
+        className="fixed inset-0 z-50 bg-[#ffffff] text-black flex flex-col overflow-y-auto"
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
         transition={{ duration: 1.2, delay: 3.5, ease: [0.76, 0, 0.24, 1] }}
       >
-
         <div
-          className={`fixed top-0 left-0 right-0 z-[60] bg-[#ffffff] border-b border-gray-100 flex justify-between items-center px-6 md:px-12 py-4 transition-transform duration-300 ease-in-out ${showFixedNav ? "translate-y-0" : "-translate-y-full"
+          className={`fixed top-0 left-0 right-0 z-[60] bg-[#ffffff] border-b border-gray-100 flex flex-col transition-transform duration-300 ease-in-out ${showFixedNav ? "translate-y-0" : "-translate-y-full"
             }`}
         >
-          <HeaderContent />
+          <PromoBanner />
+          <div className="flex justify-between items-center px-6 md:px-12 py-4 w-full">
+            <HeaderContent />
+          </div>
         </div>
 
         <motion.header
-          className="flex justify-between items-center w-full px-6 md:px-8 lg:px-10 pt-4 md:pt-6 lg:pt-8 flex-shrink-0"
+          className="flex flex-col w-full flex-shrink-0"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 4.2, ease: "easeOut" }}
         >
-          <HeaderContent />
+          <PromoBanner />
+          <div className="flex justify-between items-center w-full px-6 md:px-8 lg:px-10 pt-4 md:pt-6 lg:pt-8">
+            <HeaderContent />
+          </div>
         </motion.header>
 
         <motion.div
@@ -165,55 +188,31 @@ export default function Home() {
         </motion.div>
 
 
-        <ProductsSection />
+        <ProductsSection products={PRODUCTS_GROUP_1} />
 
         <CategoriesSection categories={[
           { title: "Apparel", image: "/EOSR1279.jpg", link: "#" },
           { title: "Accessories", image: "/EOSR1048.jpg", link: "#" }
         ]} />
 
-        <ProductsSection />
+        <ProductsSection products={PRODUCTS_GROUP_2} />
 
         <CategoriesSection categories={[
           { title: "Apothecary", image: "/healthy-product-olive-oil.jpg", link: "#" },
-          // { title: "Books", image: "/holy-communion-concept-with-bible.jpg", link: "#" },
-
-
         ]} />
 
-        <ProductsSection />
+        <ProductsSection products={PRODUCTS_GROUP_3} />
+
         <CategoriesSection categories={[
-          // { title: "Apothecary", image: "/healthy-product-olive-oil.jpg", link: "#" },
           { title: "Books", image: "/holy-communion-concept-with-bible.jpg", link: "#" },
-
-
         ]} />
+
+        <FaqSection />
+        <CtaSection />
+        <FooterSection />
       </motion.div>
     </main>
   );
 }
 
-function HeaderContent() {
-  return (
-    <>
-      <div className="text-lg md:text-lg font-light tracking-tight">
-        The Witness Collection
-      </div>
-      <nav className="hidden md:flex space-x-8 text-sm font-normal">
-        <a href="#" className="hover:opacity-50 transition-opacity">Home</a>
-        <a href="#" className="hover:opacity-50 transition-opacity">Shop</a>
-        <a href="#" className="hover:opacity-50 transition-opacity">About</a>
-        <a href="#" className="hover:opacity-50 transition-opacity">Support</a>
-        <a href="#" className="hover:opacity-50 transition-opacity">Blog</a>
-      </nav>
-      <div className="flex items-center">
-        <button className="p-2 hover:opacity-50 transition-opacity">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-        </button>
-      </div>
-    </>
-  );
-}
+

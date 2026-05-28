@@ -11,6 +11,7 @@ export interface Product {
   hoverImage?: string;
   tag?: string;
   sizes?: string[];
+  category?: string;
 }
 
 const cardVariants = {

@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { ProductCard, type Product } from "./ProductCard";
 
-const PRODUCTS: Product[] = [
+export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "1",
     name: "Bonjour Cable Sweater",
@@ -52,9 +52,7 @@ const containerVariants = {
   },
 };
 
-
-
-export function ProductsSection() {
+export function ProductsSection({ products = DEFAULT_PRODUCTS }: { products?: Product[] }) {
   return (
     <section className="w-full bg-white text-black py-16 md:py-24 px-6 md:px-10 lg:px-12">
       <div className="max-w-7xl mx-auto flex flex-col items-center">
@@ -66,7 +64,7 @@ export function ProductsSection() {
           viewport={{ once: true, margin: "-100px" }}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12 w-full"
         >
-          {PRODUCTS.map((product) => (
+          {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </motion.div>
