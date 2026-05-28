@@ -77,7 +77,7 @@ export default function Home() {
       </motion.div>
 
       <motion.h1
-        className="text-white text-5xl md:text-7xl lg:text-[6rem] font-medium tracking-tight leading-tight opacity-90 drop-shadow-sm z-10"
+        className="text-white text-4xl sm:text-5xl md:text-7xl lg:text-[6rem] font-medium tracking-tight leading-tight opacity-90 drop-shadow-sm z-10 px-4"
         initial={{ opacity: 0, y: 30, scale: 0.95 }}
         animate={{ opacity: 0.9, y: 0, scale: 1 }}
         transition={{ duration: 1.2, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
@@ -86,7 +86,7 @@ export default function Home() {
           initial={{ clipPath: "polygon(0 0, 0 0, 0 100%, 0% 100%)" }}
           animate={{ clipPath: "polygon(0 0, 100% 0, 100% 100%, 0% 100%)" }}
           transition={{ duration: 1.5, delay: 0.4, ease: "easeInOut" }}
-          className=""
+          className="inline-block"
         >
           The Witness Collection
         </motion.span>
