@@ -16,7 +16,7 @@ export function CtaSection() {
 
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-10 md:gap-16 relative z-10">
 
-        {/* Left Content */}
+
         <motion.div
           className="flex flex-col max-w-2xl"
           initial={{ opacity: 0, y: 20 }}
@@ -24,7 +24,7 @@ export function CtaSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
         >
-          <p className="text-[10px] md:text-xs font-mono uppercase tracking-widest mb-4 md:mb-6 opacity-80">
+          <p className="text-[10px] md:text-xs  uppercase tracking-widest mb-4 md:mb-6 opacity-80">
             ALL ITEMS ON PRE-ORDER.
           </p>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-medium tracking-tight leading-tight">
@@ -32,7 +32,7 @@ export function CtaSection() {
           </h2>
         </motion.div>
 
-        {/* Right Content - Buttons */}
+
         <motion.div
           className="flex flex-col sm:flex-row items-center gap-3 shrink-0"
           initial={{ opacity: 0, y: 20 }}

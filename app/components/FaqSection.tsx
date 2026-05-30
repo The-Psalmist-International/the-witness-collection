@@ -36,7 +36,7 @@ export function FaqSection() {
   return (
     <section className="w-full bg-white text-black py-20 md:py-32 px-6 md:px-10 lg:px-12 border-t border-gray-100 text-left">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-12 md:gap-24">
-        {/* Left Column */}
+
         <div className="w-full md:w-1/3 flex flex-col justify-start">
           <div className="relative ml-0 md:ml-6">
             <h2 className="text-4xl md:text-5xl lg:text-[3.5rem] font-normal tracking-tight leading-[1.1]">
@@ -47,7 +47,7 @@ export function FaqSection() {
           </div>
         </div>
 
-        {/* Right Column */}
+
         <div className="w-full md:w-2/3 flex flex-col">
           <div className="flex flex-col w-full">
             {FAQS.map((faq, index) => {

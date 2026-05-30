@@ -61,7 +61,6 @@ export function ProductCard({ product }: { product: Product }) {
       </div>
 
       <div className="mt-4 relative h-10 w-full">
-        {/* If product has sizes, we transition out the title to show sizes on hover */}
         {product.sizes && product.sizes.length > 0 ? (
           <>
             <div className="absolute inset-0 flex flex-col text-left transition-opacity duration-300 ease-out opacity-100 group-hover:opacity-0 group-hover:pointer-events-none">
@@ -85,7 +84,7 @@ export function ProductCard({ product }: { product: Product }) {
             </div>
           </>
         ) : (
-          /* If no sizes, just display title and price permanently */
+
           <div className="absolute inset-0 flex flex-col text-left">
             <h3 className="text-sm font-medium tracking-tight text-neutral-900">
               {product.name}

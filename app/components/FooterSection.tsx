@@ -6,7 +6,7 @@ export function FooterSection() {
   return (
     <footer className="w-full bg-[#0a0a0a] text-white py-12 md:py-16 px-6 md:px-10 lg:px-12 flex-shrink-0 text-left border-t border-neutral-900">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between gap-12 lg:gap-24">
-        {/* Left Side: Logo and Subtitle */}
+
         <div className="flex flex-col gap-4 max-w-sm">
           <div className="text-xl md:text-2xl font-medium tracking-tight flex items-center gap-3">
             <div className="w-5 h-5 bg-white rounded-[4px]" style={{ clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 80%)" }} />
@@ -17,7 +17,7 @@ export function FooterSection() {
           </p>
         </div>
 
-        {/* Right Side: Links */}
+
         <div className="flex flex-wrap gap-12 md:gap-24 lg:gap-32">
           <div className="flex flex-col gap-6">
             <h4 className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">Follow</h4>
@@ -46,7 +46,7 @@ export function FooterSection() {
         </div>
       </div>
 
-      {/* Bottom Bar */}
+
       <div className="max-w-7xl mx-auto mt-16 md:mt-24 pt-8 border-t border-neutral-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 text-xs text-neutral-500 font-light">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
           <span>© 2026 The Witness Collection. All rights reserved.</span>
@@ -56,9 +56,7 @@ export function FooterSection() {
           </div>
         </div>
         <div className="flex items-center gap-1.5">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
+
           <span>Powered by the <span className="text-neutral-300 font-medium">Mystic Engineering Team</span></span>
         </div>
       </div>

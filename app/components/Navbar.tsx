@@ -33,10 +33,11 @@ export function HeaderContent() {
 
   return (
     <>
-      <Link href="/" className="text-lg md:text-lg font-light tracking-tight hover:opacity-70 transition-opacity relative z-50">
+      <Link href="/" className="text-lg md:text-lg font-light tracking-tight hover:opacity-70 transition-opacity relative z-50 flex  gap-2 justify-cetner items-center">
+        <div className="w-5 h-5 bg-purple-950 rounded-[4px]" style={{ clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 80%)" }} />
         The Witness Collection
       </Link>
-      
+
       <nav className="hidden md:flex space-x-8 text-sm font-normal">
         {navLinks.map((link) => (
           <Link key={link.name} href={link.href} className="hover:opacity-50 transition-opacity capitalize">
@@ -53,7 +54,7 @@ export function HeaderContent() {
           </svg>
         </button>
 
-        <button 
+        <button
           className="p-2 md:hidden hover:opacity-50 transition-opacity focus:outline-none"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
@@ -76,7 +77,7 @@ export function HeaderContent() {
 
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div 
+          <motion.div
             className="fixed inset-0 z-40 bg-white text-black flex flex-col justify-center items-start px-10"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -92,8 +93,8 @@ export function HeaderContent() {
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.5, delay: i * 0.1, ease: [0.25, 1, 0.5, 1] }}
                 >
-                  <Link 
-                    href={link.href} 
+                  <Link
+                    href={link.href}
                     className="text-4xl md:text-5xl font-medium tracking-tight hover:opacity-50 transition-opacity capitalize"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >

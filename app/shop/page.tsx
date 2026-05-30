@@ -41,7 +41,7 @@ export default function ShopPage() {
 
   return (
     <main className="flex-1 bg-white w-full min-h-screen text-black overflow-x-hidden flex flex-col">
-      {/* Sticky Header */}
+
       <div className="sticky top-0 z-50 bg-white border-b border-gray-100">
         <PromoBanner />
         <div className="flex justify-between items-center px-6 md:px-12 py-4 w-full">
@@ -51,7 +51,7 @@ export default function ShopPage() {
 
       <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-12 py-12 md:py-20 w-full flex-1">
 
-        {/* Page Header & Filters */}
+
         <div className="flex flex-col space-y-12 mb-16 md:mb-24">
           <motion.h1
             className="text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight"
@@ -62,7 +62,6 @@ export default function ShopPage() {
             Shop the Collection
           </motion.h1>
 
-          {/* Filters using Bracket Style */}
           <motion.div
             className="flex flex-wrap gap-4 md:gap-8"
             initial={{ opacity: 0, y: 20 }}
@@ -75,7 +74,7 @@ export default function ShopPage() {
                 onClick={() => setActiveFilter(category)}
                 className={`text-xs md:text-sm  tracking-widest transition-colors duration-300 cursor-pointer ${activeFilter === category
                   ? "text-black font-semibold"
-                  : "text-gray-400 hover:text-gray-700 font-normal"
+                  : "text-gray-400 hover:text-gray-700 font-light"
                   }`}
               >
                 ({category})
@@ -84,7 +83,7 @@ export default function ShopPage() {
           </motion.div>
         </div>
 
-        {/* Product Sections */}
+
         <div className="space-y-24 md:space-y-32">
           <AnimatePresence mode="popLayout">
             {categoriesToDisplay.map((category) => {
@@ -101,13 +100,13 @@ export default function ShopPage() {
                   transition={{ duration: 0.5 }}
                   className="space-y-8 md:space-y-12 w-full"
                 >
-                  {/* Category Header (Editorial Style) */}
+
                   <div>
                     <p className="text-xs uppercase tracking-widest text-gray-500 mb-4">({category})</p>
                     <div className="w-full h-[1px] bg-gray-100" />
                   </div>
 
-                  {/* Product Grid */}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12 w-full">
                     {categoryProducts.map((product) => (
                       <ProductCard key={product.id} product={product} />
