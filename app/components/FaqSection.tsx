@@ -92,7 +92,7 @@ export function FaqSection() {
 
           <div className="mt-16 md:mt-24 pt-4 text-left">
             <p className="text-base font-medium text-black">
-              Can't find your answers here ? <a href="#" className="underline decoration-1 underline-offset-4 hover:opacity-70 transition-opacity">Get in touch</a>
+              Can&apos;t find your answers here ? <a href="#" className="underline decoration-1 underline-offset-4 hover:opacity-70 transition-opacity">Get in touch</a>
             </p>
           </div>
         </div>
