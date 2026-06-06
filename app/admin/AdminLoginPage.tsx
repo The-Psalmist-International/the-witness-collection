@@ -1,6 +1,5 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
-import { AdminLoginForm } from "@/app/admin/AdminLoginForm";
+import { AdminLoginContent } from "@/app/admin/AdminLoginContent";
 
 const LOGIN_BACKGROUND_IMAGE =
   "https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=2400&q=80";
@@ -8,8 +7,8 @@ const LOGIN_BACKGROUND_IMAGE =
 type AdminLoginPageProps = {
   isConfigured: boolean;
   showForm?: boolean;
+  resetSuccess?: boolean;
   children?: ReactNode;
-  successMessage?: string;
 };
 
 function BrandMark() {
@@ -29,8 +28,8 @@ function BrandMark() {
 export function AdminLoginPage({
   isConfigured,
   showForm = true,
+  resetSuccess = false,
   children,
-  successMessage,
 }: AdminLoginPageProps) {
   return (
     <main
@@ -54,34 +53,10 @@ export function AdminLoginPage({
                   <BrandMark />
                 </div>
 
-                <h1 className="mt-8 text-center text-[1.75rem] font-semibold tracking-tight text-black">
-                  Sign in with email
-                </h1>
-                <p className="mt-3 text-center text-sm leading-6 text-neutral-500">
-                  Please enter your credentials to access the admin dashboard.
-                </p>
-
-                {successMessage && (
-                  <p className="mt-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm leading-6 text-green-800">
-                    {successMessage}
-                  </p>
-                )}
-
-                <AdminLoginForm isConfigured={isConfigured} />
-
-                <p className="mt-10 text-center text-xs leading-5 text-neutral-400">
-                  Authorized admin access only. Manage orders, products, and
-                  pre-order activity for The Witness Collection.
-                </p>
-
-                <p className="mt-6 text-center text-xs text-neutral-400">
-                  <Link
-                    href="/"
-                    className="font-medium text-neutral-600 transition-colors hover:text-purple-950"
-                  >
-                    Back to store
-                  </Link>
-                </p>
+                <AdminLoginContent
+                  isConfigured={isConfigured}
+                  resetSuccess={resetSuccess}
+                />
               </>
             ) : (
               <>

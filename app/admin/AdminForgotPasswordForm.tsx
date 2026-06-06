@@ -1,18 +1,51 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { requestPasswordReset } from "@/app/admin/actions";
+import { AuthSuccessScreen } from "@/app/components/auth/AuthSuccessScreen";
+import { useToast } from "@/app/components/toast/toast-context";
 import {
   initialAdminFormState,
   type AdminFormState,
 } from "@/app/lib/admin/types";
 
 export function AdminForgotPasswordForm() {
+  const { toast } = useToast();
   const [state, formAction, pending] = useActionState<AdminFormState, FormData>(
     requestPasswordReset,
     initialAdminFormState
   );
+
+  const wasPending = useRef(false);
+
+  useEffect(() => {
+    if (
+      wasPending.current &&
+      !pending &&
+      state.status === "error" &&
+      state.message
+    ) {
+      toast({
+        variant: "error",
+        title: "Reset link not sent",
+        description: state.message,
+      });
+    }
+
+    wasPending.current = pending;
+  }, [pending, state.message, state.status, toast]);
+
+  if (state.status === "success") {
+    return (
+      <AuthSuccessScreen
+        title="Check your email"
+        description={state.message}
+        actionLabel="Back to sign in"
+        actionHref="/admin"
+      />
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-sm">
@@ -38,16 +71,6 @@ export function AdminForgotPasswordForm() {
             className="h-12 w-full rounded-xl border border-neutral-200 bg-white px-4 text-sm text-black outline-none transition-colors placeholder:text-neutral-400 focus:border-purple-950"
           />
         </div>
-
-        {state.status === "success" && (
-          <p className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm leading-6 text-green-800">
-            {state.message}
-          </p>
-        )}
-
-        {state.status === "error" && state.message && (
-          <p className="text-sm leading-5 text-red-600">{state.message}</p>
-        )}
 
         <button
           type="submit"

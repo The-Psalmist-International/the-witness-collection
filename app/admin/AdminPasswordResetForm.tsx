@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { resetPassword } from "@/app/admin/actions";
 import { EyeIcon, EyeOffIcon } from "@/app/admin/AdminIcons";
+import { useToast } from "@/app/components/toast/toast-context";
 import {
   initialAdminFormState,
   type AdminFormState,
@@ -23,10 +24,30 @@ export function AdminPasswordResetForm({
 }: AdminPasswordResetFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { toast } = useToast();
   const [state, formAction, pending] = useActionState<AdminFormState, FormData>(
     resetPassword,
     initialAdminFormState
   );
+
+  const wasPending = useRef(false);
+
+  useEffect(() => {
+    if (
+      wasPending.current &&
+      !pending &&
+      state.status === "error" &&
+      state.message
+    ) {
+      toast({
+        variant: "error",
+        title: "Password not saved",
+        description: state.message,
+      });
+    }
+
+    wasPending.current = pending;
+  }, [pending, state.message, state.status, toast]);
 
   return (
     <div className="mx-auto w-full max-w-sm">
@@ -98,10 +119,6 @@ export function AdminPasswordResetForm({
             </button>
           </div>
         </div>
-
-        {state.status === "error" && state.message && (
-          <p className="text-sm leading-5 text-red-600">{state.message}</p>
-        )}
 
         <button
           type="submit"

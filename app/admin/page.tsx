@@ -26,11 +26,7 @@ export default async function AdminDashboardPage({
     return (
       <AdminLoginPage
         isConfigured={session.isConfigured}
-        successMessage={
-          params.reset === "success"
-            ? "Password updated successfully. Sign in with your new password."
-            : undefined
-        }
+        resetSuccess={params.reset === "success"}
       />
     );
   }

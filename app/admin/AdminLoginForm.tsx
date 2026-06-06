@@ -1,29 +1,58 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { loginAdmin } from "@/app/admin/actions";
 import { EyeIcon, EyeOffIcon } from "@/app/admin/AdminIcons";
+import { useToast } from "@/app/components/toast/toast-context";
 import {
   initialAdminLoginState,
   type AdminLoginState,
 } from "@/app/lib/admin/types";
 
 export function AdminLoginForm({ isConfigured }: { isConfigured: boolean }) {
+  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [state, formAction, pending] = useActionState<AdminLoginState, FormData>(
     loginAdmin,
     initialAdminLoginState
   );
+  const hasShownConfigWarning = useRef(false);
+
+  useEffect(() => {
+    if (!isConfigured && !hasShownConfigWarning.current) {
+      hasShownConfigWarning.current = true;
+      toast({
+        variant: "warning",
+        title: "Admin access is not configured",
+        description:
+          "Set DATABASE_URL, ADMIN_SESSION_SECRET, and bootstrap admin credentials before signing in.",
+        duration: 8000,
+      });
+    }
+  }, [isConfigured, toast]);
+
+  const wasPending = useRef(false);
+
+  useEffect(() => {
+    if (
+      wasPending.current &&
+      !pending &&
+      state.status === "error" &&
+      state.message
+    ) {
+      toast({
+        variant: "error",
+        title: "Sign in failed",
+        description: state.message,
+      });
+    }
+
+    wasPending.current = pending;
+  }, [pending, state.message, state.status, toast]);
 
   return (
     <form action={formAction} className="mt-10 flex flex-col gap-6">
-      {!isConfigured && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-900">
-          Set DATABASE_URL, ADMIN_SESSION_SECRET, and bootstrap admin credentials
-          before signing in.
-        </div>
-      )}
 
       <div className="flex flex-col gap-2">
         <label htmlFor="email" className="text-sm font-semibold text-black">
@@ -64,10 +93,6 @@ export function AdminLoginForm({ isConfigured }: { isConfigured: boolean }) {
           </button>
         </div>
       </div>
-
-      {state.message && (
-        <p className="text-sm leading-5 text-red-600">{state.message}</p>
-      )}
 
       <button
         type="submit"
