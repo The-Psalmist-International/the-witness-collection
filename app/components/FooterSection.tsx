@@ -25,10 +25,10 @@ export function FooterSection() {
               Follow
             </h4>
             <div className="flex flex-col gap-4">
-              <Link href="#" className="text-sm text-neutral-300 hover:text-white transition-colors">
+              <Link href="#" className="pressable text-sm text-neutral-300 transition-colors hover:text-white active:text-white active:opacity-70">
                 TikTok
               </Link>
-              <Link href="#" className="text-sm text-neutral-300 hover:text-white transition-colors">
+              <Link href="#" className="pressable text-sm text-neutral-300 transition-colors hover:text-white active:text-white active:opacity-70">
                 Instagram
               </Link>
             </div>
@@ -39,13 +39,13 @@ export function FooterSection() {
               Resources
             </h4>
             <div className="flex flex-col gap-4">
-              <Link href="/" className="text-sm text-neutral-300 hover:text-white transition-colors">
+              <Link href="/" className="pressable text-sm text-neutral-300 transition-colors hover:text-white active:text-white active:opacity-70">
                 Home
               </Link>
-              <Link href="/shop" className="text-sm text-neutral-300 hover:text-white transition-colors">
+              <Link href="/shop" className="pressable text-sm text-neutral-300 transition-colors hover:text-white active:text-white active:opacity-70">
                 Shop
               </Link>
-              <Link href="#" className="text-sm text-neutral-300 hover:text-white transition-colors">
+              <Link href="#" className="pressable text-sm text-neutral-300 transition-colors hover:text-white active:text-white active:opacity-70">
                 Blog
               </Link>
             </div>
@@ -56,10 +56,10 @@ export function FooterSection() {
               Company
             </h4>
             <div className="flex flex-col gap-4">
-              <Link href="/about" className="text-sm text-neutral-300 hover:text-white transition-colors">
+              <Link href="/about" className="pressable text-sm text-neutral-300 transition-colors hover:text-white active:text-white active:opacity-70">
                 About
               </Link>
-              <Link href="#" className="text-sm text-neutral-300 hover:text-white transition-colors">
+              <Link href="#" className="pressable text-sm text-neutral-300 transition-colors hover:text-white active:text-white active:opacity-70">
                 Support
               </Link>
             </div>
@@ -71,10 +71,10 @@ export function FooterSection() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
           <span>(c) 2026 The Witness Collection. All rights reserved.</span>
           <div className="flex items-center gap-6">
-            <Link href="#" className="hover:text-neutral-300 transition-colors">
+            <Link href="#" className="pressable transition-colors hover:text-neutral-300 active:text-neutral-200">
               Privacy
             </Link>
-            <Link href="#" className="hover:text-neutral-300 transition-colors">
+            <Link href="#" className="pressable transition-colors hover:text-neutral-300 active:text-neutral-200">
               Terms
             </Link>
           </div>

@@ -123,7 +123,7 @@ function CategoryColumn({ category, isSingle }: { category: Category; isSingle: 
           src={category.image}
           alt={category.title}
           fill
-          className="object-cover transition-transform duration-1000 group-hover:scale-105"
+          className="object-cover transition-transform duration-1000 can-hover:group-hover:scale-105 active:scale-[1.03]"
           sizes="(max-width: 768px) 100vw, 50vw"
         />
         <div className="absolute inset-0 bg-black/40" />
@@ -147,10 +147,10 @@ function CategoryColumn({ category, isSingle }: { category: Category; isSingle: 
             href={category.link}
             className="inline-flex items-center gap-1 group/btn"
           >
-            <span className="px-6 py-3 bg-white text-black rounded-full text-sm font-semibold transition-all duration-300 ring-0 ring-white/30 hover:bg-gray-100 group-hover/btn:ring-[2px] ">
+            <span className="pressable px-6 py-3 bg-white text-black rounded-full text-sm font-semibold transition-all duration-300 ring-0 ring-white/30 hover:bg-gray-100 active:bg-gray-200 can-hover:group-hover/btn:ring-2">
               Shop now
             </span>
-            <span className="w-11 h-11 bg-white text-black rounded-full flex items-center justify-center transition-all duration-300 ring-0 ring-white/30 hover:bg-gray-100 group-hover/btn:ring-[2px]">
+            <span className="pressable flex h-11 w-11 items-center justify-center rounded-full bg-white text-black transition-all duration-300 ring-0 ring-white/30 hover:bg-gray-100 active:bg-gray-200 can-hover:group-hover/btn:ring-2">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="5" y1="19" x2="19" y2="5"></line>
                 <polyline points="9 5 19 5 19 15"></polyline>

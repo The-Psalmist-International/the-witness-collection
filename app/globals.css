@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant can-hover (@media (hover: hover) and (pointer: fine));
+
 @theme {
   --font-stack-sans: var(--font-stack-sans-headline), var(--font-geist-sans), sans-serif;
 }
@@ -9,6 +11,20 @@
     background-color: #000;
     color: #fff;
     font-family: var(--font-stack-sans);
+  }
+}
+
+@layer utilities {
+  .pressable {
+    transition-property: color, background-color, border-color, opacity, transform;
+    transition-duration: 150ms;
+  }
+
+  @media (hover: none) {
+    .pressable:active {
+      opacity: 0.82;
+      transform: scale(0.98);
+    }
   }
 }
 

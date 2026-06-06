@@ -79,7 +79,7 @@ export function ProductsSection({ products = DEFAULT_PRODUCTS }: { products?: Pr
         >
           <Link
             href="/shop"
-            className="text-xs md:text-sm font-medium text-black  pb-1 hover:opacity-60 transition-opacity tracking-wide uppercase"
+            className="pressable text-xs font-medium tracking-wide text-black uppercase transition-opacity hover:opacity-60 active:opacity-40 md:text-sm"
           >
             View All
           </Link>

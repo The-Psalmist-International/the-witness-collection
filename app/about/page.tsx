@@ -131,7 +131,20 @@ export default function AboutPage() {
               {offers.map((offer) => (
                 <li
                   key={offer.id}
-                  className={`text-2xl md:text-4xl font-medium cursor-pointer transition-colors duration-300 ${activeOffer === offer.id ? "text-black" : "text-gray-300 hover:text-gray-500"}`}
+                  role="button"
+                  tabIndex={0}
+                  className={`pressable cursor-pointer text-2xl font-medium transition-colors duration-300 md:text-4xl ${
+                    activeOffer === offer.id
+                      ? "text-black"
+                      : "text-gray-300 hover:text-gray-500 active:text-gray-600"
+                  }`}
+                  onClick={() => setActiveOffer(offer.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setActiveOffer(offer.id);
+                    }
+                  }}
                   onMouseEnter={() => setActiveOffer(offer.id)}
                 >
                   {offer.id}

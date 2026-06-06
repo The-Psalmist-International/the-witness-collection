@@ -53,10 +53,10 @@ export function ShopPageClient({ products }: { products: Product[] }) {
               <button
                 key={category}
                 onClick={() => setActiveFilter(category)}
-                className={`cursor-pointer text-xs tracking-widest transition-colors duration-300 md:text-sm ${
+                className={`pressable cursor-pointer text-xs tracking-widest transition-colors duration-300 md:text-sm ${
                   activeFilter === category
                     ? "font-semibold text-black"
-                    : "font-light text-gray-400 hover:text-gray-700"
+                    : "font-light text-gray-400 hover:text-gray-700 active:text-gray-900"
                 }`}
               >
                 ({category})

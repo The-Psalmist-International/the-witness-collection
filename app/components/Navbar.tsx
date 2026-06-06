@@ -49,7 +49,7 @@ export function HeaderContent() {
     <>
       <Link
         href="/"
-        className="text-lg md:text-lg font-light tracking-tight hover:opacity-70 transition-opacity relative z-50 flex gap-2 justify-center items-center"
+        className="pressable relative z-50 flex items-center justify-center gap-2 text-lg font-light tracking-tight transition-opacity hover:opacity-70 active:opacity-50 md:text-lg"
       >
         <div
           className="w-5 h-5 bg-purple-950 rounded-[4px]"
@@ -63,7 +63,7 @@ export function HeaderContent() {
           <Link
             key={link.name}
             href={link.href}
-            className="hover:opacity-50 transition-opacity capitalize"
+            className="pressable capitalize transition-opacity hover:opacity-50 active:opacity-30"
           >
             {link.name}
           </Link>
@@ -71,7 +71,7 @@ export function HeaderContent() {
       </nav>
 
       <div className="flex items-center gap-2 relative z-50 text-black">
-        <button type="button" className="p-2 hover:opacity-50 transition-opacity">
+        <button type="button" className="pressable p-2 transition-opacity hover:opacity-50 active:opacity-30">
           <svg
             width="20"
             height="20"
@@ -91,7 +91,7 @@ export function HeaderContent() {
           type="button"
           aria-label="Open cart"
           onClick={openCart}
-          className="relative p-2 hover:opacity-50 transition-opacity"
+          className="pressable relative p-2 transition-opacity hover:opacity-50 active:opacity-30"
         >
           <svg
             width="20"
@@ -116,7 +116,7 @@ export function HeaderContent() {
 
         <button
           type="button"
-          className="p-2 md:hidden hover:opacity-50 transition-opacity focus:outline-none"
+          className="pressable p-2 transition-opacity hover:opacity-50 active:opacity-30 focus:outline-none md:hidden"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
           <svg
@@ -169,7 +169,7 @@ export function HeaderContent() {
                 >
                   <Link
                     href={link.href}
-                    className="text-4xl md:text-5xl font-medium tracking-tight hover:opacity-50 transition-opacity capitalize"
+                    className="pressable text-4xl font-medium tracking-tight capitalize transition-opacity hover:opacity-50 active:opacity-30 md:text-5xl"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {link.name}

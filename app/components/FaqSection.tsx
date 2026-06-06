@@ -58,13 +58,13 @@ export function FaqSection() {
                 <div key={index} className="border-b border-gray-100 py-6 first:pt-0">
                   <button
                     onClick={() => setOpenIndex(isOpen ? null : index)}
-                    className="w-full flex items-center justify-between text-left focus:outline-none group cursor-pointer"
+                    className="pressable group flex w-full cursor-pointer items-center justify-between text-left focus:outline-none"
                   >
                     <div className="flex items-center gap-4">
                       <span className={`text-base md:text-lg font-light transition-colors duration-300 ${isOpen ? 'text-[#3b0764]' : 'text-[#9ca3af]'}`}>
                         {number}.
                       </span>
-                      <span className={`text-base md:text-lg font-light transition-colors duration-300 ${isOpen ? 'text-[#3b0764]' : 'text-[#9ca3af] group-hover:text-gray-700'}`}>
+                      <span className={`text-base font-light transition-colors duration-300 md:text-lg ${isOpen ? "text-[#3b0764]" : "text-[#9ca3af] can-hover:group-hover:text-gray-700 group-active:text-gray-700"}`}>
                         {faq.question}
                       </span>
                     </div>
@@ -92,7 +92,13 @@ export function FaqSection() {
 
           <div className="mt-16 md:mt-24 pt-4 text-left">
             <p className="text-base font-medium text-black">
-              Can&apos;t find your answers here ? <a href="#" className="underline decoration-1 underline-offset-4 hover:opacity-70 transition-opacity">Get in touch</a>
+              Can&apos;t find your answers here ?{" "}
+              <a
+                href="#"
+                className="pressable underline decoration-1 underline-offset-4 transition-opacity hover:opacity-70 active:opacity-50"
+              >
+                Get in touch
+              </a>
             </p>
           </div>
         </div>

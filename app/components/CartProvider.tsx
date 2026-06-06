@@ -162,7 +162,7 @@ function CartDrawer({
             type="button"
             aria-label="Close cart"
             onClick={handleClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 text-black transition-colors hover:border-black"
+            className="pressable flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 text-black transition-colors hover:border-black active:border-black active:bg-neutral-100"
           >
             <svg
               width="18"
@@ -227,7 +227,7 @@ function CartDrawer({
                         <button
                           type="button"
                           onClick={() => removeItem(item.productId)}
-                          className="text-xs text-neutral-400 transition-colors hover:text-black"
+                          className="pressable text-xs text-neutral-400 transition-colors hover:text-black active:text-neutral-700"
                         >
                           Remove
                         </button>
@@ -258,7 +258,7 @@ function CartDrawer({
                                   item.quantity - 1
                                 )
                               }
-                              className="flex h-8 w-8 items-center justify-center text-sm text-black transition-colors hover:bg-neutral-100"
+                              className="pressable flex h-8 w-8 items-center justify-center text-sm text-black transition-colors hover:bg-neutral-100 active:bg-neutral-200"
                             >
                               −
                             </button>
@@ -274,7 +274,7 @@ function CartDrawer({
                                   item.quantity + 1
                                 )
                               }
-                              className="flex h-8 w-8 items-center justify-center text-sm text-black transition-colors hover:bg-neutral-100"
+                              className="pressable flex h-8 w-8 items-center justify-center text-sm text-black transition-colors hover:bg-neutral-100 active:bg-neutral-200"
                             >
                               +
                             </button>
@@ -359,10 +359,10 @@ function CartDrawer({
                 </span>
                 <div className="grid grid-cols-2 gap-2">
                   <label
-                    className={`flex h-10 cursor-pointer items-center justify-center rounded-md border text-sm font-medium transition-colors ${
+                    className={`pressable flex h-10 cursor-pointer items-center justify-center rounded-md border text-sm font-medium transition-colors ${
                       fulfillmentType === "delivery"
                         ? "border-black bg-black text-white"
-                        : "border-neutral-200 text-black hover:border-neutral-400"
+                        : "border-neutral-200 text-black hover:border-neutral-400 active:border-neutral-500 active:bg-neutral-50"
                     }`}
                   >
                     <input
@@ -376,10 +376,10 @@ function CartDrawer({
                     Delivery
                   </label>
                   <label
-                    className={`flex h-10 cursor-pointer items-center justify-center rounded-md border text-sm font-medium transition-colors ${
+                    className={`pressable flex h-10 cursor-pointer items-center justify-center rounded-md border text-sm font-medium transition-colors ${
                       fulfillmentType === "pickup"
                         ? "border-black bg-black text-white"
-                        : "border-neutral-200 text-black hover:border-neutral-400"
+                        : "border-neutral-200 text-black hover:border-neutral-400 active:border-neutral-500 active:bg-neutral-50"
                     }`}
                   >
                     <input
@@ -467,7 +467,7 @@ function CartDrawer({
             <button
               type="submit"
               disabled={pending || items.length === 0}
-              className="flex h-11 w-full items-center justify-center rounded-full bg-black px-5 text-sm font-semibold text-white transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
+              className="pressable flex h-11 w-full items-center justify-center rounded-full bg-black px-5 text-sm font-semibold text-white transition-colors hover:bg-neutral-800 active:bg-neutral-900 disabled:cursor-not-allowed disabled:bg-neutral-300"
             >
               {pending ? "Submitting..." : "Submit pre-order"}
             </button>

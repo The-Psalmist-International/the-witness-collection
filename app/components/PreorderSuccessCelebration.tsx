@@ -110,7 +110,7 @@ export function PreorderSuccessCelebration({
         <button
           type="button"
           onClick={onClose}
-          className="mt-8 flex h-11 w-full items-center justify-center rounded-full bg-purple-950 px-5 text-sm font-semibold text-white transition-colors hover:bg-purple-900"
+          className="pressable mt-8 flex h-11 w-full items-center justify-center rounded-full bg-purple-950 px-5 text-sm font-semibold text-white transition-colors hover:bg-purple-900 active:bg-purple-800"
         >
           Continue shopping
         </button>

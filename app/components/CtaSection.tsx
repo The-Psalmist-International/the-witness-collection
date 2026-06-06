@@ -41,16 +41,16 @@ export function CtaSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <Link href="/shop" className="w-full sm:w-auto bg-white text-black px-6 py-3 rounded-full text-sm font-semibold hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 group">
+          <Link href="/shop" className="pressable flex w-full items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition-colors hover:bg-gray-100 active:bg-gray-200 sm:w-auto group">
             Shop now
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-0.5">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform can-hover:group-hover:translate-x-0.5">
               <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
           </Link>
 
-          <button className="w-full sm:w-auto bg-black text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-neutral-900 transition-colors flex items-center justify-center gap-2 group">
+          <button className="pressable flex w-full items-center justify-center gap-2 rounded-full bg-black px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-neutral-900 active:bg-neutral-800 sm:w-auto group">
             Contact sales
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-0.5">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform can-hover:group-hover:translate-x-0.5">
               <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
           </button>

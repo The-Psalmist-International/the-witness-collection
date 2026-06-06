@@ -220,7 +220,7 @@ export function LocationAutocomplete({
                   type="button"
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => selectSuggestion(address)}
-                  className={`w-full px-3 py-2.5 text-left text-sm text-neutral-900 transition-colors hover:bg-neutral-100 ${
+                  className={`pressable w-full px-3 py-2.5 text-left text-sm text-neutral-900 transition-colors hover:bg-neutral-100 active:bg-neutral-200 ${
                     activeIndex === index ? "bg-neutral-100" : ""
                   }`}
                 >

@@ -153,14 +153,14 @@ export function HomePage({ productGroups }: HomePageProps) {
             >
               <Link
                 href="/shop"
-                className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition-colors hover:bg-gray-100"
+                className="pressable rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition-colors hover:bg-gray-100 active:bg-gray-200"
               >
                 Shop now
               </Link>
               <Link
                 href="/shop"
                 aria-label="Shop the collection"
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-black transition-colors hover:bg-gray-100"
+                className="pressable flex h-11 w-11 items-center justify-center rounded-full bg-white text-black transition-colors hover:bg-gray-100 active:bg-gray-200"
               >
                 <svg
                   width="18"
