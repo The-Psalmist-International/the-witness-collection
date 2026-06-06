@@ -3,25 +3,39 @@
 import Link from "next/link";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useCart } from "./CartProvider";
 
 export function PromoBanner() {
   return (
     <div className="w-full bg-[#3b0764] relative overflow-hidden text-white text-center py-3 px-4 text-xs font-medium tracking-wide">
       <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay">
-        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full" preserveAspectRatio="none">
+        <svg
+          viewBox="0 0 200 200"
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-full h-full"
+          preserveAspectRatio="none"
+        >
           <filter id="noiseFilterBanner">
-            <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch" />
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.9"
+              numOctaves="3"
+              stitchTiles="stitch"
+            />
           </filter>
           <rect width="100%" height="100%" filter="url(#noiseFilterBanner)" />
         </svg>
       </div>
-      <span className="relative z-10 text-sm font-normal">All items are currently on pre-order.🎁</span>
+      <span className="relative z-10 text-sm font-normal">
+        All items are currently on pre-order.
+      </span>
     </div>
   );
 }
 
 export function HeaderContent() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { cartQuantity, openCart } = useCart();
 
   const navLinks = [
     { name: "Home", href: "/" },
@@ -33,32 +47,88 @@ export function HeaderContent() {
 
   return (
     <>
-      <Link href="/" className="text-lg md:text-lg font-light tracking-tight hover:opacity-70 transition-opacity relative z-50 flex  gap-2 justify-cetner items-center">
-        <div className="w-5 h-5 bg-purple-950 rounded-[4px]" style={{ clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 80%)" }} />
+      <Link
+        href="/"
+        className="text-lg md:text-lg font-light tracking-tight hover:opacity-70 transition-opacity relative z-50 flex gap-2 justify-center items-center"
+      >
+        <div
+          className="w-5 h-5 bg-purple-950 rounded-[4px]"
+          style={{ clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 80%)" }}
+        />
         The Witness Collection
       </Link>
 
       <nav className="hidden md:flex space-x-8 text-sm font-normal">
         {navLinks.map((link) => (
-          <Link key={link.name} href={link.href} className="hover:opacity-50 transition-opacity capitalize">
+          <Link
+            key={link.name}
+            href={link.href}
+            className="hover:opacity-50 transition-opacity capitalize"
+          >
             {link.name}
           </Link>
         ))}
       </nav>
 
       <div className="flex items-center gap-2 relative z-50 text-black">
-        <button className="p-2 hover:opacity-50 transition-opacity">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <button type="button" className="p-2 hover:opacity-50 transition-opacity">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
         </button>
 
         <button
+          type="button"
+          aria-label="Open cart"
+          onClick={openCart}
+          className="relative p-2 hover:opacity-50 transition-opacity"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="9" cy="21" r="1" />
+            <circle cx="20" cy="21" r="1" />
+            <path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L23 6H6" />
+          </svg>
+          {cartQuantity > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-purple-950 px-1 text-[10px] leading-none text-white">
+              {cartQuantity}
+            </span>
+          )}
+        </button>
+
+        <button
+          type="button"
           className="p-2 md:hidden hover:opacity-50 transition-opacity focus:outline-none"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             {isMobileMenuOpen ? (
               <>
                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -91,7 +161,11 @@ export function HeaderContent() {
                   initial={{ opacity: 0, x: -40 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.5, delay: i * 0.1, ease: [0.25, 1, 0.5, 1] }}
+                  transition={{
+                    duration: 0.5,
+                    delay: i * 0.1,
+                    ease: [0.25, 1, 0.5, 1],
+                  }}
                 >
                   <Link
                     href={link.href}

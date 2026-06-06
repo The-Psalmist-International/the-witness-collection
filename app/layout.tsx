@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Stack_Sans_Headline } from "next/font/google";
 import "./globals.css";
 import { LenisProvider } from "./components/LenisProvider";
+import { CartProvider } from "./components/CartProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,7 +35,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${stackSansHeadline.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-stack-sans">
-        <LenisProvider>{children}</LenisProvider>
+        <CartProvider>
+          <LenisProvider>{children}</LenisProvider>
+        </CartProvider>
       </body>
     </html>
   );

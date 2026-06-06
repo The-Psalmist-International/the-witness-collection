@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 export function CtaSection() {
   return (
@@ -40,12 +41,12 @@ export function CtaSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <button className="w-full sm:w-auto bg-white text-black px-6 py-3 rounded-full text-sm font-semibold hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 group">
+          <Link href="/shop" className="w-full sm:w-auto bg-white text-black px-6 py-3 rounded-full text-sm font-semibold hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 group">
             Shop now
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-0.5">
               <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
-          </button>
+          </Link>
 
           <button className="w-full sm:w-auto bg-black text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-neutral-900 transition-colors flex items-center justify-center gap-2 group">
             Contact sales
