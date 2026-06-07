@@ -48,7 +48,7 @@ function getUploadErrorMessage(response: Response, data: UploadResponse) {
     case 413:
       return "This image is too large. Choose a file that is 5 MB or smaller.";
     case 500:
-      return "The server could not save your image. Try again in a moment.";
+      return "The image could not be uploaded to Cloudinary. Try again.";
     default:
       return response.ok
         ? "The upload response was incomplete. Try uploading the image again."

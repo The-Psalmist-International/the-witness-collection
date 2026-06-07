@@ -1,7 +1,6 @@
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
 import { NextResponse } from "next/server";
 import { verifyAdminSession } from "@/app/lib/admin/auth";
+import { uploadProductImage } from "@/app/lib/cloudinary/upload";
 import { hasPermission } from "@/app/lib/admin/roles";
 
 const ALLOWED_TYPES = new Set([
@@ -13,12 +12,12 @@ const ALLOWED_TYPES = new Set([
 
 const MAX_BYTES = 5 * 1024 * 1024;
 
-function getExtension(mimeType: string) {
-  if (mimeType === "image/jpeg") {
-    return "jpg";
+function getUploadErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
   }
 
-  return mimeType.split("/")[1] ?? "bin";
+  return "The image could not be uploaded to Cloudinary. Try again.";
 }
 
 export async function POST(request: Request) {
@@ -73,26 +72,22 @@ export async function POST(request: Request) {
       );
     }
 
-    const extension = getExtension(file.type);
-    const filename = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${extension}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "products");
-
-    await mkdir(uploadDir, { recursive: true });
-    await writeFile(
-      path.join(uploadDir, filename),
-      Buffer.from(await file.arrayBuffer())
-    );
+    const uploadResult = await uploadProductImage({
+      buffer: Buffer.from(await file.arrayBuffer()),
+      mimeType: file.type,
+      originalName: file.name,
+    });
 
     return NextResponse.json({
-      url: `/uploads/products/${filename}`,
+      url: uploadResult.url,
+      publicId: uploadResult.publicId,
     });
   } catch (error) {
     console.error("Product image upload failed:", error);
 
     return NextResponse.json(
       {
-        error:
-          "The server could not save your image. Try again or choose a smaller file.",
+        error: getUploadErrorMessage(error),
       },
       { status: 500 }
     );
