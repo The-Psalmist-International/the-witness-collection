@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import { AdminButton } from "@/app/admin/AdminButton";
 import { CloudUploadIcon, TrashIcon } from "@/app/admin/AdminIcons";
+import { useToast } from "@/app/components/toast/toast-context";
 
 type ProductImageUploadProps = {
   id: string;
@@ -13,6 +14,48 @@ type ProductImageUploadProps = {
   defaultUrl?: string;
 };
 
+type UploadResponse = {
+  url?: string;
+  error?: string;
+};
+
+async function readUploadResponse(response: Response): Promise<UploadResponse> {
+  const rawBody = await response.text();
+
+  if (!rawBody.trim()) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(rawBody) as UploadResponse;
+  } catch {
+    return {};
+  }
+}
+
+function getUploadErrorMessage(response: Response, data: UploadResponse) {
+  if (data.error) {
+    return data.error;
+  }
+
+  switch (response.status) {
+    case 401:
+      return "Your session has expired. Sign in again and retry the upload.";
+    case 403:
+      return "You do not have permission to upload product images.";
+    case 400:
+      return "The selected file is not valid. Use a JPG, PNG, WebP, or GIF under 5 MB.";
+    case 413:
+      return "This image is too large. Choose a file that is 5 MB or smaller.";
+    case 500:
+      return "The server could not save your image. Try again in a moment.";
+    default:
+      return response.ok
+        ? "The upload response was incomplete. Try uploading the image again."
+        : `The upload could not be completed (error ${response.status}). Try again.`;
+  }
+}
+
 export function ProductImageUpload({
   id,
   name,
@@ -20,10 +63,19 @@ export function ProductImageUpload({
   required = false,
   defaultUrl = "",
 }: ProductImageUploadProps) {
+  const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const [imageUrl, setImageUrl] = useState(defaultUrl);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState("");
+
+  const showUploadError = (description: string) => {
+    toast({
+      variant: "error",
+      title: "Image upload failed",
+      description,
+      duration: 7000,
+    });
+  };
 
   const handleFileChange = async (file: File | null) => {
     if (!file) {
@@ -31,7 +83,6 @@ export function ProductImageUpload({
     }
 
     setUploading(true);
-    setError("");
 
     try {
       const body = new FormData();
@@ -42,19 +93,27 @@ export function ProductImageUpload({
         body,
       });
 
-      const data = (await response.json()) as { url?: string; error?: string };
+      const data = await readUploadResponse(response);
 
       if (!response.ok || !data.url) {
-        throw new Error(data.error || "Upload failed.");
+        throw new Error(getUploadErrorMessage(response, data));
       }
 
       setImageUrl(data.url);
     } catch (uploadError) {
       setImageUrl("");
-      setError(
+
+      if (uploadError instanceof TypeError) {
+        showUploadError(
+          "Could not reach the server. Check your internet connection and try again."
+        );
+        return;
+      }
+
+      showUploadError(
         uploadError instanceof Error
           ? uploadError.message
-          : "Upload failed."
+          : "The image could not be uploaded. Try again."
       );
     } finally {
       setUploading(false);
@@ -126,8 +185,6 @@ export function ProductImageUpload({
           </span>
         </button>
       )}
-
-      {error && <p className="text-xs text-red-600">{error}</p>}
     </div>
   );
 }

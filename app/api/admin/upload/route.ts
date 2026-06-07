@@ -22,48 +22,79 @@ function getExtension(mimeType: string) {
 }
 
 export async function POST(request: Request) {
-  const session = await verifyAdminSession();
+  try {
+    const session = await verifyAdminSession();
 
-  if (
-    !session.isAuthenticated ||
-    session.mustResetPassword ||
-    !hasPermission(session.role, "products")
-  ) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
+    if (!session.isAuthenticated) {
+      return NextResponse.json(
+        { error: "Your session has expired. Sign in again and retry the upload." },
+        { status: 401 }
+      );
+    }
 
-  const formData = await request.formData();
-  const file = formData.get("file");
+    if (session.mustResetPassword) {
+      return NextResponse.json(
+        { error: "Set a new password before uploading product images." },
+        { status: 403 }
+      );
+    }
 
-  if (!(file instanceof File)) {
-    return NextResponse.json({ error: "No file provided." }, { status: 400 });
-  }
+    if (!hasPermission(session.role, "products")) {
+      return NextResponse.json(
+        { error: "You do not have permission to upload product images." },
+        { status: 403 }
+      );
+    }
 
-  if (!ALLOWED_TYPES.has(file.type)) {
+    const formData = await request.formData();
+    const file = formData.get("file");
+
+    if (!(file instanceof File)) {
+      return NextResponse.json(
+        { error: "No image was selected. Choose a file and try again." },
+        { status: 400 }
+      );
+    }
+
+    if (!ALLOWED_TYPES.has(file.type)) {
+      return NextResponse.json(
+        {
+          error:
+            "This file type is not supported. Upload a JPG, PNG, WebP, or GIF image.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (file.size > MAX_BYTES) {
+      return NextResponse.json(
+        { error: "This image is too large. Choose a file that is 5 MB or smaller." },
+        { status: 400 }
+      );
+    }
+
+    const extension = getExtension(file.type);
+    const filename = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${extension}`;
+    const uploadDir = path.join(process.cwd(), "public", "uploads", "products");
+
+    await mkdir(uploadDir, { recursive: true });
+    await writeFile(
+      path.join(uploadDir, filename),
+      Buffer.from(await file.arrayBuffer())
+    );
+
+    return NextResponse.json({
+      url: `/uploads/products/${filename}`,
+    });
+  } catch (error) {
+    console.error("Product image upload failed:", error);
+
     return NextResponse.json(
-      { error: "Upload a JPG, PNG, WebP, or GIF image." },
-      { status: 400 }
+      {
+        error:
+          "The server could not save your image. Try again or choose a smaller file.",
+      },
+      { status: 500 }
     );
   }
-
-  if (file.size > MAX_BYTES) {
-    return NextResponse.json(
-      { error: "Image must be 5 MB or smaller." },
-      { status: 400 }
-    );
-  }
-
-  const extension = getExtension(file.type);
-  const filename = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${extension}`;
-  const uploadDir = path.join(process.cwd(), "public", "uploads", "products");
-
-  await mkdir(uploadDir, { recursive: true });
-  await writeFile(
-    path.join(uploadDir, filename),
-    Buffer.from(await file.arrayBuffer())
-  );
-
-  return NextResponse.json({
-    url: `/uploads/products/${filename}`,
-  });
 }
