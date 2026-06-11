@@ -3,25 +3,50 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SHOP_FILTER_CATEGORIES } from "@/app/lib/products/categories";
-import { PromoBanner, HeaderContent } from "../components/Navbar";
-import { FooterSection } from "../components/FooterSection";
-import { ProductCard, type Product } from "../components/ProductCard";
+import { PromoBanner, HeaderContent } from "@/app/components/Navbar";
+import { FooterSection } from "@/app/components/FooterSection";
+import { ProductCard, type Product } from "@/app/components/ProductCard";
 
 const SHOP_CATEGORIES = [...SHOP_FILTER_CATEGORIES];
 
 export function ShopPageClient({ products }: { products: Product[] }) {
   const [activeFilter, setActiveFilter] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredProducts = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
+    if (!query) {
+      return products;
+    }
+
+    return products.filter((product) => {
+      const haystack = [
+        product.name,
+        product.category,
+        product.tag,
+        product.price,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(query);
+    });
+  }, [products, searchQuery]);
 
   const categoriesToDisplay = useMemo(() => {
     if (activeFilter === "All") {
       const categories = new Set(
-        products.map((product) => product.category).filter(Boolean) as string[]
+        filteredProducts
+          .map((product) => product.category)
+          .filter(Boolean) as string[]
       );
       return Array.from(categories);
     }
 
     return [activeFilter];
-  }, [activeFilter, products]);
+  }, [activeFilter, filteredProducts]);
 
   return (
     <main className="flex min-h-screen w-full flex-1 flex-col overflow-x-hidden bg-white text-black">
@@ -42,6 +67,21 @@ export function ShopPageClient({ products }: { products: Product[] }) {
           >
             Shop the Collection
           </motion.h1>
+
+          <motion.div
+            className="max-w-xl"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.08 }}
+          >
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search products by name, category, or price"
+              className="h-11 w-full rounded-full border border-neutral-200 px-5 text-sm outline-none transition-colors focus:border-black"
+            />
+          </motion.div>
 
           <motion.div
             className="flex flex-wrap gap-4 md:gap-8"
@@ -68,7 +108,7 @@ export function ShopPageClient({ products }: { products: Product[] }) {
         <div className="space-y-24 md:space-y-32">
           <AnimatePresence mode="popLayout">
             {categoriesToDisplay.map((category) => {
-              const categoryProducts = products.filter(
+              const categoryProducts = filteredProducts.filter(
                 (product) => product.category === category
               );
 

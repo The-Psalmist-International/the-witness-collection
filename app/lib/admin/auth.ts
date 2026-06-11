@@ -100,17 +100,16 @@ export async function clearAdminSession() {
 
 export async function verifyAdminSession(): Promise<AdminSession> {
   const secret = getSessionSecret();
+  const isConfigured = Boolean(secret && process.env.DATABASE_URL);
 
   if (!secret) {
     return { isAuthenticated: false, isConfigured: false };
   }
 
-  await ensureBootstrap();
-
   const cookieValue = (await cookies()).get(ADMIN_COOKIE)?.value;
 
   if (!cookieValue) {
-    return { isAuthenticated: false, isConfigured: true };
+    return { isAuthenticated: false, isConfigured };
   }
 
   const [payload, signature] = cookieValue.split(".");
@@ -147,10 +146,16 @@ export async function verifyAdminSession(): Promise<AdminSession> {
       return { isAuthenticated: false, isConfigured: true };
     }
 
-    const user = await getAdminUserById(session.userId);
+    let user = null;
+
+    try {
+      user = await getAdminUserById(session.userId);
+    } catch {
+      return { isAuthenticated: false, isConfigured };
+    }
 
     if (!user || user.status !== "active") {
-      return { isAuthenticated: false, isConfigured: true };
+      return { isAuthenticated: false, isConfigured };
     }
 
     return {

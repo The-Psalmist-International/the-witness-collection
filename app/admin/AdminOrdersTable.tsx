@@ -6,9 +6,12 @@ import { EyeIcon } from "@/app/admin/AdminIcons";
 import { OrderDetailDrawer } from "@/app/admin/OrderDetailDrawer";
 import { PaginationBar } from "@/app/admin/PaginationBar";
 import type { Preorder } from "@/app/lib/db/schema";
+import { getStatusLabel } from "@/app/lib/preorders/constants";
+import { getAdminPaymentStatusLabel } from "@/app/lib/payments/constants";
 
 type AdminOrdersTableProps = {
   preorders: Preorder[];
+  searchQuery?: string;
   pagination: {
     currentPage: number;
     totalPages: number;
@@ -34,9 +37,9 @@ function StatusBadge({ status }: { status: string }) {
 
   return (
     <span
-      className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${styles}`}
+      className={`rounded-full px-3 py-1 text-xs font-medium ${styles}`}
     >
-      {status}
+      {getStatusLabel(status)}
     </span>
   );
 }
@@ -54,6 +57,7 @@ function ViewButton({ onClick }: { onClick: () => void }) {
 
 export function AdminOrdersTable({
   preorders,
+  searchQuery,
   pagination,
 }: AdminOrdersTableProps) {
   const [selectedOrder, setSelectedOrder] = useState<Preorder | null>(null);
@@ -73,14 +77,16 @@ export function AdminOrdersTable({
     <>
       <div className="relative overflow-hidden rounded-md border border-neutral-200 bg-white">
         <div className="hidden overflow-x-auto lg:block">
-          <table className="w-full min-w-[1100px] text-left">
+          <table className="w-full min-w-[1280px] text-left">
             <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase tracking-widest text-neutral-500">
               <tr>
                 <th className="px-5 py-4 font-medium">Created</th>
+                <th className="px-5 py-4 font-medium">Reference</th>
                 <th className="px-5 py-4 font-medium">Customer</th>
                 <th className="px-5 py-4 font-medium">Type</th>
                 <th className="px-5 py-4 font-medium">Address</th>
                 <th className="px-5 py-4 font-medium">Total</th>
+                <th className="px-5 py-4 font-medium">Payment</th>
                 <th className="px-5 py-4 font-medium">Status</th>
                 <th className="px-5 py-4 font-medium">View</th>
               </tr>
@@ -90,6 +96,9 @@ export function AdminOrdersTable({
                 <tr key={preorder.id} className="align-top">
                   <td className="px-5 py-5 text-sm text-neutral-500">
                     {formatDate(preorder.createdAt)}
+                  </td>
+                  <td className="px-5 py-5 text-sm font-medium text-black">
+                    {preorder.orderReference ?? "—"}
                   </td>
                   <td className="px-5 py-5">
                     <p className="text-sm font-medium text-black">
@@ -110,6 +119,9 @@ export function AdminOrdersTable({
                   <td className="px-5 py-5 text-sm font-medium text-black">
                     {preorder.totalLabel}
                   </td>
+                  <td className="px-5 py-5 text-sm text-neutral-600">
+                    {getAdminPaymentStatusLabel(preorder.paymentStatus)}
+                  </td>
                   <td className="px-5 py-5">
                     <StatusBadge status={preorder.status} />
                   </td>
@@ -128,6 +140,9 @@ export function AdminOrdersTable({
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium text-black">
+                    {preorder.orderReference ?? "—"}
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-black">
                     {preorder.customerName}
                   </p>
                   <p className="mt-1 text-xs text-neutral-500">
@@ -138,6 +153,9 @@ export function AdminOrdersTable({
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                 <StatusBadge status={preorder.status} />
+                <span className="rounded-full bg-amber-50 px-3 py-1 text-amber-900">
+                  {getAdminPaymentStatusLabel(preorder.paymentStatus)}
+                </span>
                 <span className="rounded-full bg-neutral-100 px-3 py-1 capitalize text-neutral-700">
                   {preorder.fulfillmentType ?? "delivery"}
                 </span>
@@ -156,6 +174,7 @@ export function AdminOrdersTable({
 
         <PaginationBar
           basePath="/admin/orders"
+          searchQuery={searchQuery}
           currentPage={pagination.currentPage}
           totalPages={pagination.totalPages}
           totalItems={pagination.totalItems}

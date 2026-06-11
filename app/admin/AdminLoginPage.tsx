@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { AdminLoginContent } from "@/app/admin/AdminLoginContent";
+import { BrandLogo } from "@/app/components/BrandLogo";
 
 const LOGIN_BACKGROUND_IMAGE =
   "https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=2400&q=80";
@@ -10,20 +11,6 @@ type AdminLoginPageProps = {
   resetSuccess?: boolean;
   children?: ReactNode;
 };
-
-function BrandMark() {
-  return (
-    <span
-      className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-black"
-      aria-hidden="true"
-    >
-      <span
-        className="h-5 w-5 rounded-[4px] bg-white"
-        style={{ clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 80%)" }}
-      />
-    </span>
-  );
-}
 
 export function AdminLoginPage({
   isConfigured,
@@ -50,7 +37,7 @@ export function AdminLoginPage({
             {showForm ? (
               <>
                 <div className="flex justify-center">
-                  <BrandMark />
+                  <BrandLogo size="md" showWordmark={false} priority />
                 </div>
 
                 <AdminLoginContent
@@ -61,7 +48,7 @@ export function AdminLoginPage({
             ) : (
               <>
                 <div className="flex justify-center">
-                  <BrandMark />
+                  <BrandLogo size="md" showWordmark={false} priority />
                 </div>
                 <div className="mt-8">{children}</div>
               </>

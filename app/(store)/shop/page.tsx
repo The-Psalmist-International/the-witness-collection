@@ -1,4 +1,4 @@
-import { ShopPageClient } from "@/app/shop/ShopPageClient";
+import { ShopPageClient } from "@/app/(store)/shop/ShopPageClient";
 import { listActiveProducts } from "@/app/lib/products/data";
 
 export const dynamic = "force-dynamic";

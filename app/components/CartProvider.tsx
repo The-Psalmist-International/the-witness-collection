@@ -11,15 +11,27 @@ import {
   type ReactNode,
 } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { previewCheckoutPricing } from "@/app/actions/checkout";
 import { createPreorder } from "@/app/actions/preorders";
+import { useCustomer } from "@/app/components/CustomerProvider";
+import { CheckoutContactAccordion } from "@/app/components/CheckoutContactAccordion";
+import { DiscountAppliedNotice } from "@/app/components/DiscountAppliedNotice";
+import { CartLinePrice } from "@/app/components/ProductPrice";
 import { LocationAutocomplete } from "@/app/components/LocationAutocomplete";
+import { PaymentProofUpload } from "@/app/components/PaymentProofUpload";
 import { PreorderSuccessCelebration } from "@/app/components/PreorderSuccessCelebration";
 import type { Product } from "@/app/components/ProductCard";
 import { SizeSelect } from "@/app/components/SizeSelect";
+import type { CheckoutPricing } from "@/app/lib/discounts/types";
 import {
   PICKUP_DETAILS,
   type FulfillmentType,
 } from "@/app/lib/preorders/constants";
+import {
+  PAYMENT_BANK_DETAILS,
+  PAYMENT_INSTRUCTIONS,
+} from "@/app/lib/payments/constants";
 import {
   initialPreorderState,
   type CartItem,
@@ -102,11 +114,13 @@ function CartDrawer({
   formAction,
   pending,
   onResetState,
+  onClearErrors,
 }: {
   state: CreatePreorderState;
   formAction: (formData: FormData) => void;
   pending: boolean;
   onResetState: () => void;
+  onClearErrors: () => void;
 }) {
   const {
     items,
@@ -117,15 +131,94 @@ function CartDrawer({
     updateItemSize,
     updateItemQuantity,
   } = useCart();
-  const totalLabel = getTotalLabel(items);
+  const { customer, isAuthenticated, fullName, billingAddress } = useCustomer();
   const [fulfillmentType, setFulfillmentType] =
     useState<FulfillmentType>("delivery");
+  const [discountCode, setDiscountCode] = useState("");
+  const [pricing, setPricing] = useState<CheckoutPricing | null>(null);
+  const [addressMode, setAddressMode] = useState<"billing" | "custom">(
+    billingAddress ? "billing" : "custom"
+  );
+  const [checkoutStep, setCheckoutStep] = useState<"details" | "payment">(
+    "details"
+  );
+
+  useEffect(() => {
+    if (!isOpen || items.length === 0) {
+      setPricing(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    void previewCheckoutPricing(items, discountCode).then((nextPricing) => {
+      if (!cancelled) {
+        setPricing(nextPricing);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [discountCode, isOpen, items]);
+
+  useEffect(() => {
+    if (state.fieldErrors?.paymentProof) {
+      setCheckoutStep("payment");
+    }
+  }, [state.fieldErrors?.paymentProof]);
+
+  const totalLabel = pricing?.totalLabel ?? getTotalLabel(items);
+  const subtotalLabel = pricing?.subtotalLabel ?? getTotalLabel(items);
+  const discountLabel = pricing?.discountLabel ?? null;
+  const hasDiscount = Boolean(pricing && pricing.discountAmount > 0);
+  const secretCodeApplied =
+    Boolean(discountCode.trim()) &&
+    pricing?.appliedDiscountCode?.toUpperCase() === discountCode.trim().toUpperCase();
+  const secretCodeInvalid =
+    Boolean(discountCode.trim()) &&
+    pricing !== null &&
+    !secretCodeApplied &&
+    pricing.discountAmount === 0;
+  const autoDiscountApplied =
+    hasDiscount &&
+    !discountCode.trim() &&
+    Boolean(pricing?.appliedDiscountName);
 
   const handleClose = () => {
     if (state.status === "success") {
       onResetState();
     }
+    setCheckoutStep("details");
     closeCart();
+  };
+
+  const proceedToPayment = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    const form = event.currentTarget.form;
+
+    if (!form) {
+      return;
+    }
+
+    if (!form.reportValidity()) {
+      return;
+    }
+
+    if (fulfillmentType === "delivery") {
+      if (addressMode === "custom" || !billingAddress) {
+        const locationInput = form.elements.namedItem(
+          "customerLocation"
+        ) as HTMLInputElement | null;
+
+        if (!locationInput?.value.trim()) {
+          return;
+        }
+      }
+    }
+
+    onClearErrors();
+    setCheckoutStep("payment");
   };
 
   return (
@@ -180,14 +273,89 @@ function CartDrawer({
           </button>
         </div>
 
-        {state.status !== "success" && (
+        {state.status !== "success" && !isAuthenticated ? (
+          <div className="flex min-h-0 flex-1 flex-col px-5 py-8">
+            <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center text-center">
+              <h3 className="text-xl font-medium tracking-tight text-black">
+                Sign in to checkout
+              </h3>
+              <p className="mt-3 text-sm leading-6 text-neutral-500">
+                Create an account or sign in with your email and password before
+                completing your pre-order.
+              </p>
+              <div className="mt-8 flex flex-col gap-3">
+                <Link
+                  href="/account/login?redirect=/shop"
+                  className="inline-flex h-11 items-center justify-center rounded-full bg-black px-5 text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/account/register?redirect=/shop"
+                  className="inline-flex h-11 items-center justify-center rounded-full border border-neutral-200 px-5 text-sm font-semibold text-black transition-colors hover:border-black"
+                >
+                  Create account
+                </Link>
+              </div>
+            </div>
+          </div>
+        ) : state.status !== "success" ? (
         <form
           id="preorder-form"
           action={formAction}
+          encType="multipart/form-data"
           className="flex min-h-0 flex-1 flex-col"
         >
           <div className="flex-1 overflow-y-auto px-5 py-5">
-            {items.length === 0 ? (
+            {checkoutStep === "payment" ? (
+              <div className="flex flex-col gap-5">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-widest text-neutral-500">
+                    Step 2 of 2
+                  </p>
+                  <h3 className="mt-2 text-lg font-medium text-black">
+                    Make payment
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-neutral-500">
+                    Pay {totalLabel} using the details below, then upload your
+                    proof of payment.
+                  </p>
+                </div>
+
+                <div className="rounded-md border border-purple-100 bg-purple-50 px-4 py-4 text-sm leading-6 text-purple-950">
+                  <p className="font-medium">Bank details</p>
+                  <dl className="mt-3 space-y-2">
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-purple-900/70">Bank</dt>
+                      <dd>{PAYMENT_BANK_DETAILS.bankName}</dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-purple-900/70">Account name</dt>
+                      <dd>{PAYMENT_BANK_DETAILS.accountName}</dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-purple-900/70">Account number</dt>
+                      <dd>{PAYMENT_BANK_DETAILS.accountNumber}</dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-purple-900/70">Branch</dt>
+                      <dd>{PAYMENT_BANK_DETAILS.branch}</dd>
+                    </div>
+                  </dl>
+                </div>
+
+                <ul className="space-y-2 text-sm leading-6 text-neutral-600">
+                  {PAYMENT_INSTRUCTIONS.map((instruction) => (
+                    <li key={instruction} className="flex gap-2">
+                      <span className="text-purple-950">•</span>
+                      <span>{instruction}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <PaymentProofUpload error={state.fieldErrors?.paymentProof} />
+              </div>
+            ) : items.length === 0 ? (
               <div className="rounded-md border border-dashed border-neutral-200 px-4 py-10 text-center">
                 <p className="text-sm font-medium text-black">
                   Your cart is empty.
@@ -198,6 +366,14 @@ function CartDrawer({
               </div>
             ) : (
               <div className="flex flex-col gap-4">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-widest text-neutral-500">
+                    Step 1 of 2
+                  </p>
+                  <h3 className="mt-2 text-base font-medium text-black">
+                    Order details
+                  </h3>
+                </div>
                 {items.map((item) => (
                   <article
                     key={item.productId}
@@ -221,7 +397,11 @@ function CartDrawer({
                             {item.name}
                           </h3>
                           <p className="mt-1 text-xs text-neutral-500">
-                            {item.price}
+                            <CartLinePrice
+                              price={item.price}
+                              productId={item.productId}
+                              quantity={item.quantity}
+                            />
                           </p>
                         </div>
                         <button
@@ -289,69 +469,17 @@ function CartDrawer({
 
             <input type="hidden" name="items" value={JSON.stringify(items)} />
 
-            <div className="mt-6 grid grid-cols-1 gap-4">
-              <div className="flex flex-col gap-2">
-                <label
-                  htmlFor="customerName"
-                  className="text-xs font-medium uppercase tracking-widest text-neutral-500"
-                >
-                  Name
-                </label>
-                <input
-                  id="customerName"
-                  name="customerName"
-                  type="text"
-                  required
-                  className="h-10 rounded-md border border-neutral-200 px-3 text-sm outline-none transition-colors focus:border-black"
-                />
-                {state.fieldErrors?.customerName && (
-                  <p className="text-xs text-red-600">
-                    {state.fieldErrors.customerName}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label
-                  htmlFor="customerEmail"
-                  className="text-xs font-medium uppercase tracking-widest text-neutral-500"
-                >
-                  Email
-                </label>
-                <input
-                  id="customerEmail"
-                  name="customerEmail"
-                  type="email"
-                  required
-                  className="h-10 rounded-md border border-neutral-200 px-3 text-sm outline-none transition-colors focus:border-black"
-                />
-                {state.fieldErrors?.customerEmail && (
-                  <p className="text-xs text-red-600">
-                    {state.fieldErrors.customerEmail}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label
-                  htmlFor="customerPhone"
-                  className="text-xs font-medium uppercase tracking-widest text-neutral-500"
-                >
-                  Phone
-                </label>
-                <input
-                  id="customerPhone"
-                  name="customerPhone"
-                  type="tel"
-                  required
-                  className="h-10 rounded-md border border-neutral-200 px-3 text-sm outline-none transition-colors focus:border-black"
-                />
-                {state.fieldErrors?.customerPhone && (
-                  <p className="text-xs text-red-600">
-                    {state.fieldErrors.customerPhone}
-                  </p>
-                )}
-              </div>
+            <div
+              className={`mt-6 grid grid-cols-1 gap-4 ${
+                checkoutStep === "payment" ? "hidden" : ""
+              }`}
+            >
+              <CheckoutContactAccordion
+                fullName={fullName}
+                email={customer?.email ?? ""}
+                phone={customer?.phone ?? ""}
+                fieldErrors={state.fieldErrors}
+              />
 
               <div className="flex flex-col gap-2">
                 <span className="text-xs font-medium uppercase tracking-widest text-neutral-500">
@@ -393,28 +521,93 @@ function CartDrawer({
                     Pickup
                   </label>
                 </div>
-                {state.fieldErrors?.fulfillmentType && (
+                {state.fieldErrors?.fulfillmentType &&
+                fulfillmentType !== "delivery" &&
+                fulfillmentType !== "pickup" ? (
                   <p className="text-xs text-red-600">
                     {state.fieldErrors.fulfillmentType}
                   </p>
-                )}
+                ) : null}
               </div>
 
               {fulfillmentType === "delivery" ? (
-                <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="customerLocation"
-                    className="text-xs font-medium uppercase tracking-widest text-neutral-500"
-                  >
-                    Delivery address
-                  </label>
-                  <LocationAutocomplete
-                    id="customerLocation"
-                    name="customerLocation"
-                    required
-                    placeholder="Start typing your delivery address"
-                    className="h-10 w-full rounded-md border border-neutral-200 px-3 text-sm outline-none transition-colors focus:border-black"
-                  />
+                <div className="flex flex-col gap-3">
+                  {billingAddress ? (
+                    <div className="flex flex-col gap-2">
+                      <span className="text-xs font-medium uppercase tracking-widest text-neutral-500">
+                        Delivery address
+                      </span>
+                      <div className="grid grid-cols-1 gap-2">
+                        <label
+                          className={`pressable flex cursor-pointer items-start gap-3 rounded-md border px-4 py-3 text-sm transition-colors ${
+                            addressMode === "billing"
+                              ? "border-black bg-neutral-50"
+                              : "border-neutral-200 hover:border-neutral-400"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="addressModeChoice"
+                            checked={addressMode === "billing"}
+                            onChange={() => setAddressMode("billing")}
+                            className="mt-1"
+                          />
+                          <span>
+                            <span className="block font-medium text-black">
+                              Use billing address
+                            </span>
+                            <span className="mt-1 block text-neutral-500">
+                              {billingAddress}
+                            </span>
+                          </span>
+                        </label>
+                        <label
+                          className={`pressable flex cursor-pointer items-center gap-3 rounded-md border px-4 py-3 text-sm transition-colors ${
+                            addressMode === "custom"
+                              ? "border-black bg-neutral-50"
+                              : "border-neutral-200 hover:border-neutral-400"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="addressModeChoice"
+                            checked={addressMode === "custom"}
+                            onChange={() => setAddressMode("custom")}
+                          />
+                          <span className="font-medium text-black">
+                            Use a different address for this order
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {addressMode === "custom" || !billingAddress ? (
+                    <div className="flex flex-col gap-2">
+                      <label
+                        htmlFor="customerLocation"
+                        className="text-xs font-medium uppercase tracking-widest text-neutral-500"
+                      >
+                        {billingAddress
+                          ? "Different delivery address"
+                          : "Delivery address"}
+                      </label>
+                      <LocationAutocomplete
+                        id="customerLocation"
+                        name="customerLocation"
+                        required={addressMode === "custom" || !billingAddress}
+                        placeholder="Start typing your delivery address"
+                        className="h-10 w-full rounded-md border border-neutral-200 px-3 text-sm outline-none transition-colors focus:border-black"
+                      />
+                    </div>
+                  ) : (
+                    <input
+                      type="hidden"
+                      name="customerLocation"
+                      value={billingAddress ?? ""}
+                    />
+                  )}
+
                   {state.fieldErrors?.customerLocation && (
                     <p className="text-xs text-red-600">
                       {state.fieldErrors.customerLocation}
@@ -430,6 +623,44 @@ function CartDrawer({
                   </div>
                 </>
               )}
+
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="discountCode"
+                  className="text-xs font-medium uppercase tracking-widest text-neutral-500"
+                >
+                  Discount code
+                </label>
+                <input
+                  id="discountCode"
+                  name="discountCode"
+                  type="text"
+                  value={discountCode}
+                  onChange={(event) =>
+                    setDiscountCode(event.target.value.toUpperCase())
+                  }
+                  placeholder="Enter a secret code"
+                  className="h-10 rounded-md border border-neutral-200 px-3 text-sm uppercase outline-none transition-colors focus:border-black"
+                />
+                {state.fieldErrors?.discountCode && (
+                  <p className="text-xs text-red-600">
+                    {state.fieldErrors.discountCode}
+                  </p>
+                )}
+                {secretCodeApplied && pricing?.appliedDiscountName ? (
+                  <DiscountAppliedNotice
+                    message={`Code applied: ${pricing.appliedDiscountName}`}
+                  />
+                ) : null}
+                {secretCodeInvalid ? (
+                  <p className="text-xs text-red-600">
+                    This discount code is invalid or expired.
+                  </p>
+                ) : null}
+                <p className="text-xs text-neutral-500">
+                  General and product discounts are applied automatically.
+                </p>
+              </div>
 
               <div className="flex flex-col gap-2">
                 <label
@@ -460,20 +691,63 @@ function CartDrawer({
                 {state.message}
               </p>
             )}
-            <div className="mb-4 flex items-center justify-between text-sm">
-              <span className="text-neutral-500">Total</span>
-              <span className="font-medium text-black">{totalLabel}</span>
+            <div className="mb-4 space-y-2 text-sm">
+              {autoDiscountApplied ? (
+                <DiscountAppliedNotice
+                  message={`${pricing?.appliedDiscountName} applied automatically`}
+                />
+              ) : null}
+              {hasDiscount ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-neutral-500">Subtotal</span>
+                    <span className="text-neutral-400 line-through">
+                      {subtotalLabel}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-purple-950">
+                    <span>Discount</span>
+                    <span>{discountLabel}</span>
+                  </div>
+                </>
+              ) : null}
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-500">Total</span>
+                <span className="text-base font-medium text-black">
+                  {totalLabel}
+                </span>
+              </div>
             </div>
             <button
-              type="submit"
+              type={checkoutStep === "payment" ? "submit" : "button"}
+              onClick={
+                checkoutStep === "details" ? proceedToPayment : undefined
+              }
               disabled={pending || items.length === 0}
               className="pressable flex h-11 w-full items-center justify-center rounded-full bg-black px-5 text-sm font-semibold text-white transition-colors hover:bg-neutral-800 active:bg-neutral-900 disabled:cursor-not-allowed disabled:bg-neutral-300"
             >
-              {pending ? "Submitting..." : "Submit pre-order"}
+              {pending
+                ? "Submitting..."
+                : checkoutStep === "payment"
+                  ? "Submit payment proof"
+                  : "Proceed to payment"}
             </button>
+            {checkoutStep === "payment" ? (
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => {
+                  onClearErrors();
+                  setCheckoutStep("details");
+                }}
+                className="pressable mt-3 flex h-11 w-full items-center justify-center rounded-full border border-neutral-200 px-5 text-sm font-semibold text-black transition-colors hover:border-black"
+              >
+                Back to details
+              </button>
+            ) : null}
           </div>
         </form>
-        )}
+        ) : null}
       </aside>
     </div>
   );
@@ -654,6 +928,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setIsOpen(false);
   }, []);
 
+  const clearCheckoutErrors = useCallback(() => {
+    setState((current) => ({
+      ...current,
+      status: current.status === "error" ? "idle" : current.status,
+      message: "",
+      fieldErrors: undefined,
+    }));
+  }, []);
+
   return (
     <CartContext.Provider value={value}>
       {children}
@@ -662,10 +945,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         formAction={formAction}
         pending={pending}
         onResetState={() => setState(initialPreorderState)}
+        onClearErrors={clearCheckoutErrors}
       />
       {state.status === "success" && (
         <PreorderSuccessCelebration
           message={state.message}
+          orderReference={state.orderReference}
           onClose={handleSuccessClose}
         />
       )}

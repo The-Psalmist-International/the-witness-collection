@@ -1,44 +1,44 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { requireAdminSession } from "@/app/lib/admin/auth";
 import {
-  clearAdminSession,
-  createAdminSession,
-  isAdminConfigured,
-  requireAdminSession,
-  verifyAdminSession,
-} from "@/app/lib/admin/auth";
-import { bootstrapAdminUser } from "@/app/lib/admin/users/seed";
-import { validatePasswordStrength } from "@/app/lib/admin/password";
-import {
-  getDefaultAdminPath,
   hasPermission,
   isAdminRole,
   type AdminPermission,
 } from "@/app/lib/admin/roles";
-import type { AdminFormState, AdminLoginState } from "@/app/lib/admin/types";
 import {
-  authenticateAdminLogin,
   createAdminUser,
-  createPasswordResetToken,
   getAdminUserByEmail,
-  markPasswordResetTokenUsed,
   setAdminUserStatus,
-  updateAdminLastLogin,
-  updateAdminUserPassword,
-  validatePasswordResetToken,
 } from "@/app/lib/admin/users/data";
-import { getAppUrl } from "@/app/lib/mailer/app-url";
 import { sendAdminEmail } from "@/app/lib/mailer/smtp";
-import { buildAdminPasswordResetEmail } from "@/app/lib/mailer/templates/adminPasswordReset";
 import { buildAdminWelcomeEmail } from "@/app/lib/mailer/templates/adminWelcome";
+
 import {
   PREORDER_STATUSES,
   type PreorderStatus,
 } from "@/app/lib/preorders/constants";
-import { updatePreorderStatus } from "@/app/lib/preorders/data";
+import {
+  confirmPreorderPayment,
+  rejectPreorderPayment,
+  updatePreorderStatus,
+} from "@/app/lib/preorders/data";
 import { PRODUCT_CATEGORIES } from "@/app/lib/products/categories";
+import { buildOrderInvoiceEmail } from "@/app/lib/mailer/templates/orderInvoice";
+import {
+  cancelDiscountNow,
+  createDiscount,
+  reactivateDiscount,
+  setDiscountActive,
+  suspendDiscount,
+} from "@/app/lib/discounts/data";
+import {
+  DISCOUNT_SCOPES,
+  DISCOUNT_TYPES,
+  type DiscountScope,
+  type DiscountType,
+} from "@/app/lib/discounts/types";
 import {
   createProduct,
   setProductActive,
@@ -57,138 +57,6 @@ async function requirePermission(permission: AdminPermission) {
   }
 
   return session;
-}
-
-export async function loginAdmin(
-  _previousState: AdminLoginState,
-  formData: FormData
-): Promise<AdminLoginState> {
-  const email = String(formData.get("email") ?? "");
-  const password = String(formData.get("password") ?? "");
-
-  if (!isAdminConfigured()) {
-    return {
-      status: "error",
-      message:
-        "Admin access is not configured. Set ADMIN_SESSION_SECRET and DATABASE_URL.",
-    };
-  }
-
-  await bootstrapAdminUser();
-
-  const authResult = await authenticateAdminLogin(email, password);
-
-  if (!authResult.ok) {
-    return {
-      status: "error",
-      message:
-        authResult.reason === "suspended"
-          ? "This account has been suspended. Contact an administrator."
-          : "Invalid email or password.",
-    };
-  }
-
-  const user = authResult.user;
-
-  await updateAdminLastLogin(user.id);
-
-  await createAdminSession({
-    userId: user.id,
-    email: user.email,
-    role: user.role,
-    status: user.status,
-    mustResetPassword: user.mustResetPassword,
-  });
-
-  if (user.mustResetPassword) {
-    redirect("/admin/reset-password");
-  }
-
-  redirect(getDefaultAdminPath(user.role));
-}
-
-export async function logoutAdmin() {
-  await clearAdminSession();
-  redirect("/admin");
-}
-
-export async function requestPasswordReset(
-  _previousState: AdminFormState,
-  formData: FormData
-): Promise<AdminFormState> {
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  const user = email ? await getAdminUserByEmail(email) : null;
-
-  if (user && user.status === "active") {
-    try {
-      const token = await createPasswordResetToken(user.id);
-      const resetUrl = `${getAppUrl()}/admin/reset-password?token=${encodeURIComponent(token)}`;
-      const emailContent = buildAdminPasswordResetEmail({ resetUrl });
-
-      await sendAdminEmail({
-        to: user.email,
-        subject: emailContent.subject,
-        html: emailContent.html,
-      });
-    } catch {
-      // Always return generic success to avoid email enumeration.
-    }
-  }
-
-  return {
-    status: "success",
-    message:
-      "If an account exists for that email, a password reset link has been sent.",
-  };
-}
-
-export async function resetPassword(
-  _previousState: AdminFormState,
-  formData: FormData
-): Promise<AdminFormState> {
-  const password = String(formData.get("password") ?? "");
-  const confirmPassword = String(formData.get("confirmPassword") ?? "");
-  const token = String(formData.get("token") ?? "").trim();
-  const mode = String(formData.get("mode") ?? "token");
-
-  const passwordError = validatePasswordStrength(password);
-
-  if (passwordError) {
-    return { status: "error", message: passwordError };
-  }
-
-  if (password !== confirmPassword) {
-    return { status: "error", message: "Passwords do not match." };
-  }
-
-  let userId: string | null = null;
-
-  if (mode === "mandatory") {
-    const session = await verifyAdminSession();
-
-    if (!session.isAuthenticated || !session.mustResetPassword) {
-      return { status: "error", message: "Unauthorized reset request." };
-    }
-
-    userId = session.userId;
-  } else if (token) {
-    userId = await validatePasswordResetToken(token);
-
-    if (!userId) {
-      return { status: "error", message: "This reset link is invalid or expired." };
-    }
-  } else {
-    return { status: "error", message: "Missing reset token." };
-  }
-
-  await updateAdminUserPassword(userId, password, { clearMustReset: true });
-
-  if (token) {
-    await markPasswordResetTokenUsed(token);
-  }
-
-  await clearAdminSession();
-  redirect("/admin?reset=success");
 }
 
 export async function addAdminUser(formData: FormData) {
@@ -276,6 +144,45 @@ export async function changePreorderStatus(
   revalidatePath("/admin/orders");
 }
 
+export async function confirmPaymentAction(preorderId: string) {
+  await requirePermission("payments");
+
+  const preorder = await confirmPreorderPayment(preorderId);
+
+  if (!preorder) {
+    throw new Error("Order not found.");
+  }
+
+  try {
+    const email = buildOrderInvoiceEmail(preorder);
+    await sendAdminEmail({
+      to: preorder.customerEmail,
+      subject: email.subject,
+      html: email.html,
+    });
+  } catch {
+    // Payment is confirmed even if email fails.
+  }
+
+  revalidatePath("/admin/payments");
+  revalidatePath("/admin/orders");
+  revalidatePath("/account/orders");
+}
+
+export async function rejectPaymentAction(preorderId: string) {
+  await requirePermission("payments");
+
+  const preorder = await rejectPreorderPayment(preorderId);
+
+  if (!preorder) {
+    throw new Error("Order not found.");
+  }
+
+  revalidatePath("/admin/payments");
+  revalidatePath("/admin/orders");
+  revalidatePath("/account/orders");
+}
+
 function parseProductFormData(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   const price = String(formData.get("price") ?? "").trim();
@@ -346,4 +253,111 @@ export async function toggleProductActive(productId: string, isActive: boolean) 
   await requirePermission("products");
   await setProductActive(productId, isActive);
   revalidateProductPaths();
+}
+
+export async function addDiscount(formData: FormData) {
+  const session = await requirePermission("discounts");
+
+  const name = String(formData.get("name") ?? "").trim();
+  const type = String(formData.get("type") ?? "").trim();
+  const value = Number(formData.get("value"));
+  const scope = String(formData.get("scope") ?? "").trim();
+  const code = String(formData.get("code") ?? "").trim();
+  const productIds = formData
+    .getAll("productIds")
+    .map((value) => String(value).trim())
+    .filter(Boolean);
+  const maxUsesRaw = String(formData.get("maxUses") ?? "").trim();
+  const isActive = String(formData.get("isActive") ?? "true") === "true";
+
+  if (!name) {
+    throw new Error("Discount name is required.");
+  }
+
+  if (!DISCOUNT_TYPES.includes(type as DiscountType)) {
+    throw new Error("Select a valid discount type.");
+  }
+
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new Error("Enter a valid discount value.");
+  }
+
+  if (type === "percent" && value > 100) {
+    throw new Error("Percentage discounts cannot exceed 100.");
+  }
+
+  if (!DISCOUNT_SCOPES.includes(scope as DiscountScope)) {
+    throw new Error("Select a valid discount scope.");
+  }
+
+  if (scope === "secret" && !code) {
+    throw new Error("Secret discounts require a code.");
+  }
+
+  if (scope === "product" && productIds.length === 0) {
+    throw new Error("Select at least one product for a product discount.");
+  }
+
+  const startsAtRaw = String(formData.get("startsAt") ?? "").trim();
+  const endsAtRaw = String(formData.get("endsAt") ?? "").trim();
+  const startsAt = startsAtRaw ? new Date(startsAtRaw) : null;
+  const endsAt = endsAtRaw ? new Date(endsAtRaw) : null;
+
+  if (startsAtRaw && (!startsAt || Number.isNaN(startsAt.getTime()))) {
+    throw new Error("Enter a valid start date and time.");
+  }
+
+  if (endsAtRaw && (!endsAt || Number.isNaN(endsAt.getTime()))) {
+    throw new Error("Enter a valid end date and time.");
+  }
+
+  if (startsAt && endsAt && endsAt <= startsAt) {
+    throw new Error("End date must be after the start date.");
+  }
+
+  await createDiscount({
+    name,
+    type: type as DiscountType,
+    value,
+    scope: scope as DiscountScope,
+    code: scope === "secret" ? code : undefined,
+    productIds,
+    isActive,
+    startsAt,
+    endsAt,
+    maxUses: maxUsesRaw ? Number(maxUsesRaw) : null,
+    createdBy: session.userId,
+  });
+
+  revalidateDiscountPages();
+}
+
+function revalidateDiscountPages() {
+  revalidatePath("/admin/discounts");
+  revalidatePath("/shop");
+  revalidatePath("/");
+}
+
+export async function toggleDiscountActive(discountId: string, isActive: boolean) {
+  await requirePermission("discounts");
+  await setDiscountActive(discountId, isActive);
+  revalidateDiscountPages();
+}
+
+export async function suspendDiscountAction(discountId: string) {
+  await requirePermission("discounts");
+  await suspendDiscount(discountId);
+  revalidateDiscountPages();
+}
+
+export async function reactivateDiscountAction(discountId: string) {
+  await requirePermission("discounts");
+  await reactivateDiscount(discountId);
+  revalidateDiscountPages();
+}
+
+export async function cancelDiscountAction(discountId: string) {
+  await requirePermission("discounts");
+  await cancelDiscountNow(discountId);
+  revalidateDiscountPages();
 }

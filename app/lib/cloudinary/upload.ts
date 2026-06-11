@@ -19,10 +19,10 @@ type UploadProductImageOptions = {
   originalName?: string;
 };
 
-export async function uploadProductImage({
+export async function uploadCloudinaryFile({
   buffer,
   mimeType,
-  originalName = "product-image.jpg",
+  originalName = "upload.jpg",
 }: UploadProductImageOptions) {
   const body = new FormData();
   const blob = new Blob([Uint8Array.from(buffer)], { type: mimeType });
@@ -62,4 +62,18 @@ export async function uploadProductImage({
     format: result.format,
     mimeType,
   };
+}
+
+export async function uploadProductImage(options: UploadProductImageOptions) {
+  return uploadCloudinaryFile({
+    ...options,
+    originalName: options.originalName ?? "product-image.jpg",
+  });
+}
+
+export async function uploadPaymentProof(options: UploadProductImageOptions) {
+  return uploadCloudinaryFile({
+    ...options,
+    originalName: options.originalName ?? "payment-proof.jpg",
+  });
 }

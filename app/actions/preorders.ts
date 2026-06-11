@@ -1,6 +1,16 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { uploadPaymentProof } from "@/app/lib/cloudinary/upload";
+import {
+  incrementDiscountUsage,
+  listActiveDiscounts,
+} from "@/app/lib/discounts/data";
+import {
+  calculateCheckoutPricing,
+  validateSecretDiscountCode,
+} from "@/app/lib/discounts/pricing";
+import { requireCustomerSession } from "@/app/lib/customer/auth";
 import { createPreorderRecord } from "@/app/lib/preorders/data";
 import type {
   CartItem,
@@ -8,6 +18,14 @@ import type {
 } from "@/app/lib/preorders/types";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MAX_PAYMENT_PROOF_BYTES = 5 * 1024 * 1024;
+const ALLOWED_PAYMENT_PROOF_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "application/pdf",
+]);
 
 function toFormString(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
@@ -86,32 +104,31 @@ function parseItems(value: FormDataEntryValue | null): CartItem[] {
   }
 }
 
-function getPriceValue(price: string) {
-  const value = Number(price.replace(/[^\d.]/g, ""));
-  return Number.isFinite(value) ? value : 0;
-}
-
-function getTotalLabel(items: CartItem[]) {
-  const total = items.reduce(
-    (sum, item) => sum + getPriceValue(item.price) * item.quantity,
-    0
-  );
-
-  return `GHS ${new Intl.NumberFormat("en-GH", {
-    maximumFractionDigits: 2,
-  }).format(total)}`;
-}
-
 export async function createPreorder(
   _previousState: CreatePreorderState,
   formData: FormData
 ): Promise<CreatePreorderState> {
+  let customerSession;
+
+  try {
+    customerSession = await requireCustomerSession();
+  } catch {
+    return {
+      status: "error",
+      message: "Sign in to complete your pre-order.",
+      fieldErrors: {
+        auth: "You must be signed in before checking out.",
+      },
+    };
+  }
+
   const customerName = toFormString(formData.get("customerName"));
   const customerEmail = toFormString(formData.get("customerEmail"));
   const customerPhone = toFormString(formData.get("customerPhone"));
   const fulfillmentType = toFormString(formData.get("fulfillmentType"));
   const customerLocation = toFormString(formData.get("customerLocation"));
   const customerNotes = toFormString(formData.get("customerNotes"));
+  const discountCode = toFormString(formData.get("discountCode"));
   const items = parseItems(formData.get("items"));
   const fieldErrors: CreatePreorderState["fieldErrors"] = {};
 
@@ -121,6 +138,10 @@ export async function createPreorder(
 
   if (!emailPattern.test(customerEmail)) {
     fieldErrors.customerEmail = "Enter a valid email address.";
+  }
+
+  if (customerEmail !== customerSession.email) {
+    fieldErrors.customerEmail = "Use the email on your signed-in account.";
   }
 
   if (!customerPhone) {
@@ -142,6 +163,27 @@ export async function createPreorder(
     fieldErrors.items = "Select at least one item before pre-ordering.";
   }
 
+  const paymentProofEntry = formData.get("paymentProof");
+  let paymentProofUrl = "";
+
+  if (!(paymentProofEntry instanceof File) || paymentProofEntry.size === 0) {
+    fieldErrors.paymentProof = "Upload proof of payment before submitting.";
+  } else if (!ALLOWED_PAYMENT_PROOF_TYPES.has(paymentProofEntry.type)) {
+    fieldErrors.paymentProof = "Upload a JPG, PNG, WEBP, GIF, or PDF file.";
+  } else if (paymentProofEntry.size > MAX_PAYMENT_PROOF_BYTES) {
+    fieldErrors.paymentProof = "Payment proof must be 5 MB or smaller.";
+  }
+
+  const discounts = await listActiveDiscounts();
+
+  if (discountCode) {
+    const secretValidation = validateSecretDiscountCode(discounts, discountCode);
+
+    if (!secretValidation.ok) {
+      fieldErrors.discountCode = secretValidation.message;
+    }
+  }
+
   if (Object.keys(fieldErrors).length > 0) {
     return {
       status: "error",
@@ -150,8 +192,25 @@ export async function createPreorder(
     };
   }
 
+  const pricing = calculateCheckoutPricing({
+    items,
+    discounts,
+    discountCode: discountCode || null,
+  });
+
   try {
+    if (paymentProofEntry instanceof File) {
+      const buffer = Buffer.from(await paymentProofEntry.arrayBuffer());
+      const upload = await uploadPaymentProof({
+        buffer,
+        mimeType: paymentProofEntry.type,
+        originalName: paymentProofEntry.name,
+      });
+      paymentProofUrl = upload.url;
+    }
+
     const record = await createPreorderRecord({
+      customerId: customerSession.userId,
       customerName,
       customerEmail,
       customerPhone,
@@ -159,16 +218,31 @@ export async function createPreorder(
       customerLocation: isDelivery ? customerLocation : undefined,
       customerNotes,
       items,
-      totalLabel: getTotalLabel(items),
+      subtotalLabel: pricing.subtotalLabel,
+      discountLabel:
+        pricing.discountAmount > 0 ? pricing.discountLabel : undefined,
+      discountCode: pricing.appliedDiscountCode ?? undefined,
+      discountId: pricing.appliedDiscountId ?? undefined,
+      totalLabel: pricing.totalLabel,
+      paymentProofUrl,
     });
+
+    if (pricing.appliedDiscountId) {
+      await incrementDiscountUsage(pricing.appliedDiscountId);
+    }
 
     revalidatePath("/admin");
     revalidatePath("/admin/orders");
+    revalidatePath("/admin/payments");
+    revalidatePath("/account/orders");
 
     return {
       status: "success",
-      message: "Pre-order received. We will follow up with confirmation.",
+      message:
+        "Your order and payment proof were received. Payment is pending confirmation — we will email your invoice once confirmed.",
       preorderId: record?.id,
+      orderReference: record?.orderReference ?? undefined,
+      paymentStatus: record?.paymentStatus,
     };
   } catch (error) {
     const message =

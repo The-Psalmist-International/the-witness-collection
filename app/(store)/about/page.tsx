@@ -3,8 +3,8 @@
 import { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
-import { PromoBanner, HeaderContent } from "../components/Navbar";
-import { FooterSection } from "../components/FooterSection";
+import { PromoBanner, HeaderContent } from "@/app/components/Navbar";
+import { FooterSection } from "@/app/components/FooterSection";
 
 export default function AboutPage() {
   const [activeOffer, setActiveOffer] = useState("Apparel");

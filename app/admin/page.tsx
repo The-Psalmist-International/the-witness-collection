@@ -6,9 +6,9 @@ import { verifyAdminSession } from "@/app/lib/admin/auth";
 import { requireAdminPageAccess } from "@/app/lib/admin/guards";
 import {
   buildGrowthSeries,
-  getPreorderSummary,
+  getPreorderSummaryFromCounts,
 } from "@/app/lib/preorders/analytics";
-import { listPreorders } from "@/app/lib/preorders/data";
+import { getDashboardOrderMetrics } from "@/app/lib/preorders/data";
 
 export const dynamic = "force-dynamic";
 
@@ -44,9 +44,14 @@ export default async function AdminDashboardPage({
   let growthSeries = buildGrowthSeries([]);
 
   try {
-    const preorders = await listPreorders();
-    summary = getPreorderSummary(preorders);
-    growthSeries = buildGrowthSeries(preorders);
+    const { statusCounts, recentOrders, completedRevenueOrders } =
+      await getDashboardOrderMetrics();
+
+    summary = getPreorderSummaryFromCounts(
+      statusCounts,
+      completedRevenueOrders
+    );
+    growthSeries = buildGrowthSeries(recentOrders);
   } catch (error) {
     databaseError =
       error instanceof Error && error.message.includes("DATABASE_URL")

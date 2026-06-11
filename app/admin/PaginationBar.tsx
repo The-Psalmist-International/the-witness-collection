@@ -6,6 +6,7 @@ type PaginationBarProps = {
   totalPages: number;
   totalItems: number;
   pageSize: number;
+  searchQuery?: string;
 };
 
 export function PaginationBar({
@@ -14,6 +15,7 @@ export function PaginationBar({
   totalPages,
   totalItems,
   pageSize,
+  searchQuery,
 }: PaginationBarProps) {
   const start = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const end = Math.min(currentPage * pageSize, totalItems);
@@ -33,7 +35,7 @@ export function PaginationBar({
 
       <div className="flex flex-wrap items-center gap-2">
         <PaginationLink
-          href={buildPageHref(basePath, currentPage - 1)}
+          href={buildPageHref(basePath, currentPage - 1, searchQuery)}
           disabled={currentPage <= 1}
           label="Previous"
         />
@@ -48,7 +50,7 @@ export function PaginationBar({
                 <span className="px-1 text-sm text-neutral-400">...</span>
               )}
               <PaginationLink
-                href={buildPageHref(basePath, page)}
+                href={buildPageHref(basePath, page, searchQuery)}
                 disabled={false}
                 label={String(page)}
                 active={page === currentPage}
@@ -58,7 +60,7 @@ export function PaginationBar({
         })}
 
         <PaginationLink
-          href={buildPageHref(basePath, currentPage + 1)}
+          href={buildPageHref(basePath, currentPage + 1, searchQuery)}
           disabled={currentPage >= totalPages}
           label="Next"
         />
@@ -67,12 +69,19 @@ export function PaginationBar({
   );
 }
 
-function buildPageHref(basePath: string, page: number) {
-  if (page < 1) {
-    return basePath;
+function buildPageHref(basePath: string, page: number, searchQuery?: string) {
+  const params = new URLSearchParams();
+
+  if (page > 1) {
+    params.set("page", String(page));
   }
 
-  return `${basePath}?page=${page}`;
+  if (searchQuery?.trim()) {
+    params.set("q", searchQuery.trim());
+  }
+
+  const query = params.toString();
+  return query ? `${basePath}?${query}` : basePath;
 }
 
 function PaginationLink({

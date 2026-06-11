@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useState } from "react";
 import { useCanHover } from "@/app/hooks/useCanHover";
+import { ProductPrice } from "@/app/components/ProductPrice";
 import { useCart } from "./CartProvider";
 
 export interface Product {
@@ -203,9 +204,13 @@ export function ProductCard({ product }: { product: Product }) {
                 <h3 className="text-sm font-medium tracking-tight text-neutral-900">
                   {product.name}
                 </h3>
-                <span className="mt-1 text-xs font-light tracking-tight text-neutral-500">
-                  {product.price}
-                </span>
+                <ProductPrice
+                  price={product.price}
+                  productId={product.id}
+                  className="mt-1 text-xs font-light tracking-tight text-neutral-500"
+                  discountedClassName="text-xs font-medium text-purple-950"
+                  originalClassName="text-xs font-light text-neutral-400 line-through"
+                />
               </div>
 
               <div className="pointer-events-none absolute inset-0 flex flex-wrap items-center justify-start gap-2 opacity-0 transition-opacity duration-300 ease-out group-hover:pointer-events-auto group-hover:opacity-100">
@@ -230,9 +235,13 @@ export function ProductCard({ product }: { product: Product }) {
                 <h3 className="text-sm font-medium tracking-tight text-neutral-900">
                   {product.name}
                 </h3>
-                <span className="mt-1 text-xs font-light tracking-tight text-neutral-500">
-                  {product.price}
-                </span>
+                <ProductPrice
+                  price={product.price}
+                  productId={product.id}
+                  className="mt-1 text-xs font-light tracking-tight text-neutral-500"
+                  discountedClassName="text-xs font-medium text-purple-950"
+                  originalClassName="text-xs font-light text-neutral-400 line-through"
+                />
               </div>
 
               <div className="pointer-events-none absolute inset-0 flex items-center justify-start gap-2 opacity-0 transition-opacity duration-300 ease-out group-hover:pointer-events-auto group-hover:opacity-100">
@@ -260,9 +269,13 @@ export function ProductCard({ product }: { product: Product }) {
             <h3 className="text-sm font-medium tracking-tight text-neutral-900">
               {product.name}
             </h3>
-            <span className="mt-1 block text-xs font-light tracking-tight text-neutral-500">
-              {product.price}
-            </span>
+            <ProductPrice
+              price={product.price}
+              productId={product.id}
+              className="mt-1 block text-xs font-light tracking-tight text-neutral-500"
+              discountedClassName="text-xs font-medium text-purple-950"
+              originalClassName="text-xs font-light text-neutral-400 line-through"
+            />
           </div>
 
           <div className="flex flex-wrap items-center gap-2">

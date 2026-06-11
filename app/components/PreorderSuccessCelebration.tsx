@@ -6,6 +6,7 @@ import { useEffect } from "react";
 
 type PreorderSuccessCelebrationProps = {
   message: string;
+  orderReference?: string;
   onClose: () => void;
 };
 
@@ -60,6 +61,7 @@ function fireConfettiBurst() {
 
 export function PreorderSuccessCelebration({
   message,
+  orderReference,
   onClose,
 }: PreorderSuccessCelebrationProps) {
   const lenis = useLenis();
@@ -104,9 +106,17 @@ export function PreorderSuccessCelebration({
           id="preorder-success-title"
           className="text-2xl font-medium tracking-tight text-black"
         >
-          Pre-order received
+          Order submitted
         </h2>
+        {orderReference ? (
+          <p className="mt-3 text-sm font-medium text-purple-950">
+            Reference: {orderReference}
+          </p>
+        ) : null}
         <p className="mt-4 text-sm leading-7 text-neutral-600">{message}</p>
+        <p className="mt-3 text-sm leading-7 text-neutral-500">
+          Your invoice will be emailed once payment is confirmed.
+        </p>
         <button
           type="button"
           onClick={onClose}

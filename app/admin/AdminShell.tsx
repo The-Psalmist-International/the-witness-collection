@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { logoutAdmin } from "@/app/admin/actions";
+import { logoutAdmin } from "@/app/admin/actions/auth";
 import { LogOutIcon } from "@/app/admin/AdminIcons";
 import { AdminNav } from "@/app/admin/AdminNav";
+import { BrandLogo } from "@/app/components/BrandLogo";
 import type { AdminRole } from "@/app/lib/admin/roles";
 
 type AdminShellProps = {
@@ -15,16 +16,11 @@ export function AdminShell({ email, role, children }: AdminShellProps) {
     <>
       <header className="border-b border-neutral-100 bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-5 md:px-10 lg:px-12">
-          <Link
+          <BrandLogo
             href="/"
-            className="flex items-center gap-2 text-sm font-light tracking-tight text-black transition-opacity hover:opacity-70"
-          >
-            <span
-              className="h-5 w-5 rounded-[4px] bg-purple-950"
-              style={{ clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 80%)" }}
-            />
-            The Witness Collection
-          </Link>
+            size="sm"
+            wordmarkClassName="text-sm font-light tracking-tight text-black"
+          />
 
           <div className="flex items-center gap-4 text-xs text-neutral-500">
             <span className="hidden text-neutral-400 md:inline">{email}</span>
