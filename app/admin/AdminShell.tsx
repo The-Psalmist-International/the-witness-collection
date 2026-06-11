@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { logoutAdmin } from "@/app/admin/actions";
+import { logoutAdmin } from "@/app/admin/actions/auth";
 import { LogOutIcon } from "@/app/admin/AdminIcons";
 import { AdminNav } from "@/app/admin/AdminNav";
 import type { AdminRole } from "@/app/lib/admin/roles";

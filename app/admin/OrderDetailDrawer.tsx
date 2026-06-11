@@ -155,11 +155,20 @@ export function OrderDetailDrawer({ preorder, onClose }: OrderDetailDrawerProps)
 
         <section>
           <h3 className="text-xs font-medium uppercase tracking-widest text-neutral-500">
-            Total
+            Totals
           </h3>
-          <p className="mt-2 text-lg font-medium text-black">
-            {preorder.totalLabel}
-          </p>
+          <dl className="mt-2 rounded-md border border-neutral-200 px-4">
+            {preorder.subtotalLabel ? (
+              <DetailRow label="Subtotal" value={preorder.subtotalLabel} />
+            ) : null}
+            {preorder.discountLabel ? (
+              <DetailRow label="Discount" value={preorder.discountLabel} />
+            ) : null}
+            {preorder.discountCode ? (
+              <DetailRow label="Code" value={preorder.discountCode} />
+            ) : null}
+            <DetailRow label="Total" value={preorder.totalLabel} />
+          </dl>
         </section>
 
         <section>

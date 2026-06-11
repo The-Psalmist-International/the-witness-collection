@@ -11,11 +11,15 @@ import {
   type ReactNode,
 } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { previewCheckoutPricing } from "@/app/actions/checkout";
 import { createPreorder } from "@/app/actions/preorders";
+import { useCustomer } from "@/app/components/CustomerProvider";
 import { LocationAutocomplete } from "@/app/components/LocationAutocomplete";
 import { PreorderSuccessCelebration } from "@/app/components/PreorderSuccessCelebration";
 import type { Product } from "@/app/components/ProductCard";
 import { SizeSelect } from "@/app/components/SizeSelect";
+import type { CheckoutPricing } from "@/app/lib/discounts/types";
 import {
   PICKUP_DETAILS,
   type FulfillmentType,
@@ -117,9 +121,34 @@ function CartDrawer({
     updateItemSize,
     updateItemQuantity,
   } = useCart();
-  const totalLabel = getTotalLabel(items);
+  const { customer, isAuthenticated, fullName } = useCustomer();
   const [fulfillmentType, setFulfillmentType] =
     useState<FulfillmentType>("delivery");
+  const [discountCode, setDiscountCode] = useState("");
+  const [pricing, setPricing] = useState<CheckoutPricing | null>(null);
+
+  useEffect(() => {
+    if (!isOpen || items.length === 0) {
+      setPricing(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    void previewCheckoutPricing(items, discountCode).then((nextPricing) => {
+      if (!cancelled) {
+        setPricing(nextPricing);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [discountCode, isOpen, items]);
+
+  const totalLabel = pricing?.totalLabel ?? getTotalLabel(items);
+  const subtotalLabel = pricing?.subtotalLabel ?? getTotalLabel(items);
+  const discountLabel = pricing?.discountLabel ?? null;
 
   const handleClose = () => {
     if (state.status === "success") {
@@ -180,7 +209,33 @@ function CartDrawer({
           </button>
         </div>
 
-        {state.status !== "success" && (
+        {state.status !== "success" && !isAuthenticated ? (
+          <div className="flex min-h-0 flex-1 flex-col px-5 py-8">
+            <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center text-center">
+              <h3 className="text-xl font-medium tracking-tight text-black">
+                Sign in to checkout
+              </h3>
+              <p className="mt-3 text-sm leading-6 text-neutral-500">
+                Create an account or sign in with your email and password before
+                completing your pre-order.
+              </p>
+              <div className="mt-8 flex flex-col gap-3">
+                <Link
+                  href="/account/login?redirect=/shop"
+                  className="inline-flex h-11 items-center justify-center rounded-full bg-black px-5 text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/account/register?redirect=/shop"
+                  className="inline-flex h-11 items-center justify-center rounded-full border border-neutral-200 px-5 text-sm font-semibold text-black transition-colors hover:border-black"
+                >
+                  Create account
+                </Link>
+              </div>
+            </div>
+          </div>
+        ) : state.status !== "success" ? (
         <form
           id="preorder-form"
           action={formAction}
@@ -290,6 +345,10 @@ function CartDrawer({
             <input type="hidden" name="items" value={JSON.stringify(items)} />
 
             <div className="mt-6 grid grid-cols-1 gap-4">
+              <div className="rounded-md border border-neutral-100 bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
+                Signed in as <span className="font-medium text-black">{fullName}</span>
+              </div>
+
               <div className="flex flex-col gap-2">
                 <label
                   htmlFor="customerName"
@@ -302,7 +361,9 @@ function CartDrawer({
                   name="customerName"
                   type="text"
                   required
-                  className="h-10 rounded-md border border-neutral-200 px-3 text-sm outline-none transition-colors focus:border-black"
+                  readOnly
+                  defaultValue={fullName}
+                  className="h-10 rounded-md border border-neutral-200 bg-neutral-50 px-3 text-sm outline-none"
                 />
                 {state.fieldErrors?.customerName && (
                   <p className="text-xs text-red-600">
@@ -323,7 +384,9 @@ function CartDrawer({
                   name="customerEmail"
                   type="email"
                   required
-                  className="h-10 rounded-md border border-neutral-200 px-3 text-sm outline-none transition-colors focus:border-black"
+                  readOnly
+                  defaultValue={customer?.email ?? ""}
+                  className="h-10 rounded-md border border-neutral-200 bg-neutral-50 px-3 text-sm outline-none"
                 />
                 {state.fieldErrors?.customerEmail && (
                   <p className="text-xs text-red-600">
@@ -344,7 +407,9 @@ function CartDrawer({
                   name="customerPhone"
                   type="tel"
                   required
-                  className="h-10 rounded-md border border-neutral-200 px-3 text-sm outline-none transition-colors focus:border-black"
+                  readOnly
+                  defaultValue={customer?.phone ?? ""}
+                  className="h-10 rounded-md border border-neutral-200 bg-neutral-50 px-3 text-sm outline-none"
                 />
                 {state.fieldErrors?.customerPhone && (
                   <p className="text-xs text-red-600">
@@ -433,6 +498,34 @@ function CartDrawer({
 
               <div className="flex flex-col gap-2">
                 <label
+                  htmlFor="discountCode"
+                  className="text-xs font-medium uppercase tracking-widest text-neutral-500"
+                >
+                  Discount code
+                </label>
+                <input
+                  id="discountCode"
+                  name="discountCode"
+                  type="text"
+                  value={discountCode}
+                  onChange={(event) =>
+                    setDiscountCode(event.target.value.toUpperCase())
+                  }
+                  placeholder="Enter a secret code"
+                  className="h-10 rounded-md border border-neutral-200 px-3 text-sm uppercase outline-none transition-colors focus:border-black"
+                />
+                {state.fieldErrors?.discountCode && (
+                  <p className="text-xs text-red-600">
+                    {state.fieldErrors.discountCode}
+                  </p>
+                )}
+                <p className="text-xs text-neutral-500">
+                  General and product discounts are applied automatically.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label
                   htmlFor="customerNotes"
                   className="text-xs font-medium uppercase tracking-widest text-neutral-500"
                 >
@@ -473,7 +566,7 @@ function CartDrawer({
             </button>
           </div>
         </form>
-        )}
+        ) : null}
       </aside>
     </div>
   );

@@ -25,6 +25,15 @@ function mapRow(row: typeof products.$inferSelect): DbProduct {
   };
 }
 
+export async function listProducts() {
+  const rows = await getDb()
+    .select()
+    .from(products)
+    .orderBy(asc(products.sortOrder));
+
+  return rows;
+}
+
 export async function listActiveProducts(): Promise<Product[]> {
   const rows = await getDb()
     .select()

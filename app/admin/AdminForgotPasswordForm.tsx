@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useEffect, useRef } from "react";
-import { requestPasswordReset } from "@/app/admin/actions";
+import { requestPasswordReset } from "@/app/admin/actions/auth";
 import { AuthSuccessScreen } from "@/app/components/auth/AuthSuccessScreen";
 import { useToast } from "@/app/components/toast/toast-context";
 import {

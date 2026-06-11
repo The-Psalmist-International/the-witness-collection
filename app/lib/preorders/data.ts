@@ -1,4 +1,4 @@
-import { count, desc, eq, inArray } from "drizzle-orm";
+import { count, desc, eq, gte, inArray } from "drizzle-orm";
 import { ADMIN_PAGE_SIZE } from "@/app/lib/admin/pagination";
 import { getDb } from "@/app/lib/db";
 import { preorders, products, type Preorder } from "@/app/lib/db/schema";
@@ -40,6 +40,7 @@ async function enrichPreorders(preorderRows: Preorder[]): Promise<Preorder[]> {
 }
 
 export type NewPreorderInput = {
+  customerId: string;
   customerName: string;
   customerEmail: string;
   customerPhone: string;
@@ -47,6 +48,10 @@ export type NewPreorderInput = {
   customerLocation?: string;
   customerNotes?: string;
   items: CartItem[];
+  subtotalLabel: string;
+  discountLabel?: string;
+  discountCode?: string;
+  discountId?: string;
   totalLabel: string;
 };
 
@@ -54,6 +59,7 @@ export async function createPreorderRecord(input: NewPreorderInput) {
   const [record] = await getDb()
     .insert(preorders)
     .values({
+      customerId: input.customerId,
       customerName: input.customerName,
       customerEmail: input.customerEmail,
       customerPhone: input.customerPhone,
@@ -61,6 +67,10 @@ export async function createPreorderRecord(input: NewPreorderInput) {
       customerLocation: input.customerLocation || null,
       customerNotes: input.customerNotes || null,
       items: input.items,
+      subtotalLabel: input.subtotalLabel,
+      discountLabel: input.discountLabel || null,
+      discountCode: input.discountCode || null,
+      discountId: input.discountId || null,
       totalLabel: input.totalLabel,
     })
     .returning({ id: preorders.id });
@@ -70,6 +80,37 @@ export async function createPreorderRecord(input: NewPreorderInput) {
 
 export async function listPreorders(): Promise<Preorder[]> {
   return getDb().select().from(preorders).orderBy(desc(preorders.createdAt));
+}
+
+export async function getDashboardOrderMetrics() {
+  const fourteenDaysAgo = new Date();
+  fourteenDaysAgo.setHours(0, 0, 0, 0);
+  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 13);
+
+  const [statusCounts, recentOrders, completedRevenueOrders] = await Promise.all([
+    getDb()
+      .select({
+        status: preorders.status,
+        total: count(),
+      })
+      .from(preorders)
+      .groupBy(preorders.status),
+    getDb()
+      .select({
+        status: preorders.status,
+        totalLabel: preorders.totalLabel,
+        createdAt: preorders.createdAt,
+      })
+      .from(preorders)
+      .where(gte(preorders.createdAt, fourteenDaysAgo))
+      .orderBy(desc(preorders.createdAt)),
+    getDb()
+      .select({ totalLabel: preorders.totalLabel })
+      .from(preorders)
+      .where(eq(preorders.status, "completed")),
+  ]);
+
+  return { statusCounts, recentOrders, completedRevenueOrders };
 }
 
 export async function listPreordersPaginated(

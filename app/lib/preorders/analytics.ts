@@ -1,4 +1,3 @@
-import type { Preorder } from "@/app/lib/db/schema";
 import { parsePriceLabel } from "@/app/lib/preorders/utils";
 
 export type GrowthPoint = {
@@ -7,7 +6,13 @@ export type GrowthPoint = {
   revenue: number;
 };
 
-export function buildGrowthSeries(preorders: Preorder[], days = 14): GrowthPoint[] {
+type GrowthOrder = {
+  status: string;
+  totalLabel: string;
+  createdAt: Date;
+};
+
+export function buildGrowthSeries(preorders: GrowthOrder[], days = 14): GrowthPoint[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -52,20 +57,33 @@ export function buildGrowthSeries(preorders: Preorder[], days = 14): GrowthPoint
   }));
 }
 
-export function getPreorderSummary(preorders: Preorder[]) {
-  const totalOrders = preorders.length;
-  const pendingOrders = preorders.filter((o) => o.status === "pending").length;
-  const completedOrders = preorders.filter((o) => o.status === "completed").length;
-  const cancelledOrders = preorders.filter((o) => o.status === "cancelled").length;
-  const revenue = preorders
-    .filter((o) => o.status === "completed")
-    .reduce((sum, o) => sum + parsePriceLabel(o.totalLabel), 0);
+export function getPreorderSummaryFromCounts(
+  statusCounts: { status: string; total: number }[],
+  completedRevenueOrders: { totalLabel: string }[] = []
+) {
+  const countByStatus = new Map(
+    statusCounts.map((row) => [row.status, Number(row.total)])
+  );
+
+  const revenue = completedRevenueOrders.reduce(
+    (sum, order) => sum + parsePriceLabel(order.totalLabel),
+    0
+  );
 
   return {
-    totalOrders,
-    pendingOrders,
-    completedOrders,
-    cancelledOrders,
+    totalOrders: statusCounts.reduce((sum, row) => sum + Number(row.total), 0),
+    pendingOrders: countByStatus.get("pending") ?? 0,
+    completedOrders: countByStatus.get("completed") ?? 0,
+    cancelledOrders: countByStatus.get("cancelled") ?? 0,
     revenue,
   };
+}
+
+export function getPreorderSummary(preorders: GrowthOrder[]) {
+  const statusCounts = ["pending", "completed", "cancelled"].map((status) => ({
+    status,
+    total: preorders.filter((order) => order.status === status).length,
+  }));
+
+  return getPreorderSummaryFromCounts(statusCounts, preorders);
 }

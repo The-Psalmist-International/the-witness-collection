@@ -3,9 +3,9 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SHOP_FILTER_CATEGORIES } from "@/app/lib/products/categories";
-import { PromoBanner, HeaderContent } from "../components/Navbar";
-import { FooterSection } from "../components/FooterSection";
-import { ProductCard, type Product } from "../components/ProductCard";
+import { PromoBanner, HeaderContent } from "@/app/components/Navbar";
+import { FooterSection } from "@/app/components/FooterSection";
+import { ProductCard, type Product } from "@/app/components/ProductCard";
 
 const SHOP_CATEGORIES = [...SHOP_FILTER_CATEGORIES];
 

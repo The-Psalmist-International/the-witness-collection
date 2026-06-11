@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
-import { loginAdmin } from "@/app/admin/actions";
+import { loginAdmin } from "@/app/admin/actions/auth";
 import { EyeIcon, EyeOffIcon } from "@/app/admin/AdminIcons";
 import { useToast } from "@/app/components/toast/toast-context";
 import {

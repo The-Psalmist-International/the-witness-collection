@@ -22,6 +22,12 @@ const NAV_ITEMS: {
     permission: "products",
     exact: false,
   },
+  {
+    href: "/admin/discounts",
+    label: "Discounts",
+    permission: "discounts",
+    exact: false,
+  },
   { href: "/admin/users", label: "Users", permission: "users", exact: false },
 ];
 

@@ -1,6 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import {
+  incrementDiscountUsage,
+  listActiveDiscounts,
+} from "@/app/lib/discounts/data";
+import {
+  calculateCheckoutPricing,
+  validateSecretDiscountCode,
+} from "@/app/lib/discounts/pricing";
+import { requireCustomerSession } from "@/app/lib/customer/auth";
 import { createPreorderRecord } from "@/app/lib/preorders/data";
 import type {
   CartItem,
@@ -86,32 +95,31 @@ function parseItems(value: FormDataEntryValue | null): CartItem[] {
   }
 }
 
-function getPriceValue(price: string) {
-  const value = Number(price.replace(/[^\d.]/g, ""));
-  return Number.isFinite(value) ? value : 0;
-}
-
-function getTotalLabel(items: CartItem[]) {
-  const total = items.reduce(
-    (sum, item) => sum + getPriceValue(item.price) * item.quantity,
-    0
-  );
-
-  return `GHS ${new Intl.NumberFormat("en-GH", {
-    maximumFractionDigits: 2,
-  }).format(total)}`;
-}
-
 export async function createPreorder(
   _previousState: CreatePreorderState,
   formData: FormData
 ): Promise<CreatePreorderState> {
+  let customerSession;
+
+  try {
+    customerSession = await requireCustomerSession();
+  } catch {
+    return {
+      status: "error",
+      message: "Sign in to complete your pre-order.",
+      fieldErrors: {
+        auth: "You must be signed in before checking out.",
+      },
+    };
+  }
+
   const customerName = toFormString(formData.get("customerName"));
   const customerEmail = toFormString(formData.get("customerEmail"));
   const customerPhone = toFormString(formData.get("customerPhone"));
   const fulfillmentType = toFormString(formData.get("fulfillmentType"));
   const customerLocation = toFormString(formData.get("customerLocation"));
   const customerNotes = toFormString(formData.get("customerNotes"));
+  const discountCode = toFormString(formData.get("discountCode"));
   const items = parseItems(formData.get("items"));
   const fieldErrors: CreatePreorderState["fieldErrors"] = {};
 
@@ -121,6 +129,10 @@ export async function createPreorder(
 
   if (!emailPattern.test(customerEmail)) {
     fieldErrors.customerEmail = "Enter a valid email address.";
+  }
+
+  if (customerEmail !== customerSession.email) {
+    fieldErrors.customerEmail = "Use the email on your signed-in account.";
   }
 
   if (!customerPhone) {
@@ -142,6 +154,16 @@ export async function createPreorder(
     fieldErrors.items = "Select at least one item before pre-ordering.";
   }
 
+  const discounts = await listActiveDiscounts();
+
+  if (discountCode) {
+    const secretValidation = validateSecretDiscountCode(discounts, discountCode);
+
+    if (!secretValidation.ok) {
+      fieldErrors.discountCode = secretValidation.message;
+    }
+  }
+
   if (Object.keys(fieldErrors).length > 0) {
     return {
       status: "error",
@@ -150,8 +172,15 @@ export async function createPreorder(
     };
   }
 
+  const pricing = calculateCheckoutPricing({
+    items,
+    discounts,
+    discountCode: discountCode || null,
+  });
+
   try {
     const record = await createPreorderRecord({
+      customerId: customerSession.userId,
       customerName,
       customerEmail,
       customerPhone,
@@ -159,8 +188,17 @@ export async function createPreorder(
       customerLocation: isDelivery ? customerLocation : undefined,
       customerNotes,
       items,
-      totalLabel: getTotalLabel(items),
+      subtotalLabel: pricing.subtotalLabel,
+      discountLabel:
+        pricing.discountAmount > 0 ? pricing.discountLabel : undefined,
+      discountCode: pricing.appliedDiscountCode ?? undefined,
+      discountId: pricing.appliedDiscountId ?? undefined,
+      totalLabel: pricing.totalLabel,
     });
+
+    if (pricing.appliedDiscountId) {
+      await incrementDiscountUsage(pricing.appliedDiscountId);
+    }
 
     revalidatePath("/admin");
     revalidatePath("/admin/orders");

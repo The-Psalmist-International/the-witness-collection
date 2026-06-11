@@ -20,6 +20,8 @@ export type CreatePreorderState = {
     fulfillmentType: string;
     customerLocation: string;
     items: string;
+    discountCode: string;
+    auth: string;
   }>;
 };
 

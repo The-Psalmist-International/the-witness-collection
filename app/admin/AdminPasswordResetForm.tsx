@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { resetPassword } from "@/app/admin/actions";
+import { resetPassword } from "@/app/admin/actions/auth";
 import { EyeIcon, EyeOffIcon } from "@/app/admin/AdminIcons";
 import { useToast } from "@/app/components/toast/toast-context";
 import {
