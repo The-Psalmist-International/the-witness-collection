@@ -5,6 +5,7 @@ import { formatGhsAmount, parsePriceLabel } from "@/app/lib/preorders/utils";
 function getLineSubtotal(item: CartItem) {
   return parsePriceLabel(item.price) * item.quantity;
 }
+
 function getCartSubtotal(items: CartItem[]) {
   return items.reduce((sum, item) => sum + getLineSubtotal(item), 0);
 }
@@ -76,6 +77,10 @@ function getProductDiscounts(discounts: DiscountRecord[]) {
   );
 }
 
+function isProductScopedSecret(discount: DiscountRecord | null) {
+  return Boolean(discount?.productIds.length);
+}
+
 export function calculateCheckoutPricing({
   items,
   discounts,
@@ -87,37 +92,69 @@ export function calculateCheckoutPricing({
 }) {
   const subtotal = getCartSubtotal(items);
   const productDiscounts = getProductDiscounts(discounts);
+  const secretDiscount = findSecretDiscount(discounts, discountCode);
+  const productScopedSecret = isProductScopedSecret(secretDiscount);
 
-  let productDiscountAmount = 0;
+  let automaticProductDiscountAmount = 0;
+  let secretProductDiscountAmount = 0;
 
   for (const item of items) {
     const lineSubtotal = getLineSubtotal(item);
+
+    if (
+      productScopedSecret &&
+      secretDiscount!.productIds.includes(item.productId)
+    ) {
+      secretProductDiscountAmount += applyAmountDiscount(
+        lineSubtotal,
+        secretDiscount!
+      );
+      continue;
+    }
+
     const matchingDiscount = productDiscounts.find((discount) =>
       discount.productIds.includes(item.productId)
     );
 
     if (matchingDiscount) {
-      productDiscountAmount += applyAmountDiscount(
+      automaticProductDiscountAmount += applyAmountDiscount(
         lineSubtotal,
         matchingDiscount
       );
     }
   }
 
-  const secretDiscount = findSecretDiscount(discounts, discountCode);
-  const generalDiscount = secretDiscount ? null : findGeneralDiscount(discounts);
-  const orderDiscount = secretDiscount ?? generalDiscount;
-
+  const productDiscountAmount =
+    automaticProductDiscountAmount + secretProductDiscountAmount;
   const remainingSubtotal = Math.max(subtotal - productDiscountAmount, 0);
-  const orderDiscountAmount = orderDiscount
-    ? applyAmountDiscount(remainingSubtotal, orderDiscount)
-    : 0;
+
+  let orderDiscount: DiscountRecord | null = null;
+  let orderDiscountAmount = 0;
+
+  if (secretDiscount && !productScopedSecret) {
+    orderDiscount = secretDiscount;
+    orderDiscountAmount = applyAmountDiscount(remainingSubtotal, secretDiscount);
+  } else if (!secretDiscount) {
+    orderDiscount = findGeneralDiscount(discounts);
+    if (orderDiscount) {
+      orderDiscountAmount = applyAmountDiscount(remainingSubtotal, orderDiscount);
+    }
+  } else {
+    orderDiscount = findGeneralDiscount(discounts);
+    if (orderDiscount) {
+      orderDiscountAmount = applyAmountDiscount(remainingSubtotal, orderDiscount);
+    }
+  }
 
   const discountAmount = Math.min(
     subtotal,
     productDiscountAmount + orderDiscountAmount
   );
   const total = Math.max(subtotal - discountAmount, 0);
+
+  const appliedDiscountId = secretDiscount
+    ? secretDiscount.id
+    : orderDiscount?.id ?? null;
 
   return {
     subtotal,
@@ -127,9 +164,9 @@ export function calculateCheckoutPricing({
       discountAmount > 0 ? `-${formatGhsAmount(discountAmount)}` : formatGhsAmount(0),
     total,
     totalLabel: formatGhsAmount(total),
-    appliedDiscountId: orderDiscount?.id ?? null,
-    appliedDiscountCode: orderDiscount?.code ?? null,
-    appliedDiscountName: orderDiscount?.name ?? null,
+    appliedDiscountId,
+    appliedDiscountCode: secretDiscount?.code ?? null,
+    appliedDiscountName: secretDiscount?.name ?? orderDiscount?.name ?? null,
     productDiscountAmount,
     orderDiscountAmount,
   };
@@ -137,7 +174,8 @@ export function calculateCheckoutPricing({
 
 export function validateSecretDiscountCode(
   discounts: DiscountRecord[],
-  discountCode: string
+  discountCode: string,
+  items: CartItem[] = []
 ) {
   const normalizedCode = discountCode.trim().toUpperCase();
 
@@ -165,6 +203,19 @@ export function validateSecretDiscountCode(
       ok: false as const,
       message: "This discount code is inactive or has expired.",
     };
+  }
+
+  if (discount.productIds.length > 0) {
+    const hasMatchingItem = items.some((item) =>
+      discount.productIds.includes(item.productId)
+    );
+
+    if (!hasMatchingItem) {
+      return {
+        ok: false as const,
+        message: "This code does not apply to the items in your cart.",
+      };
+    }
   }
 
   return { ok: true as const, discount };

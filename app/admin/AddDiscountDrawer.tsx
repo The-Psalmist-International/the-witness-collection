@@ -58,7 +58,7 @@ export function AddDiscountDrawer({
       onClose={onClose}
       eyebrow="Discounts"
       title="Create discount"
-      subtitle="General and product discounts apply automatically. Secret discounts require a code."
+      subtitle="General and product discounts apply automatically. Secret codes can apply to the whole order or selected products."
       footer={
         <button
           type="submit"
@@ -169,19 +169,19 @@ export function AddDiscountDrawer({
           <input type="hidden" name="code" value="" />
         )}
 
-        {scope === "product" ? (
+        {scope === "product" || scope === "secret" ? (
           <div className="flex flex-col gap-2">
             <label
               htmlFor="discountProducts"
               className="text-xs font-medium uppercase tracking-widest text-neutral-500"
             >
-              Products
+              {scope === "secret" ? "Products (optional)" : "Products"}
             </label>
             <select
               id="discountProducts"
               name="productIds"
               multiple
-              required
+              required={scope === "product"}
               className="min-h-32 w-full rounded-md border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-purple-950"
             >
               {productOptions.map((option) => (
@@ -191,7 +191,9 @@ export function AddDiscountDrawer({
               ))}
             </select>
             <p className="text-xs text-neutral-500">
-              Hold Ctrl or Cmd to select multiple products.
+              {scope === "secret"
+                ? "Leave empty to apply the code to the whole order. Select products to limit the code to those items only."
+                : "Hold Ctrl or Cmd to select multiple products."}
             </p>
           </div>
         ) : (

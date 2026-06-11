@@ -177,7 +177,11 @@ export async function createPreorder(
   const discounts = await listActiveDiscounts();
 
   if (discountCode) {
-    const secretValidation = validateSecretDiscountCode(discounts, discountCode);
+    const secretValidation = validateSecretDiscountCode(
+      discounts,
+      discountCode,
+      items
+    );
 
     if (!secretValidation.ok) {
       fieldErrors.discountCode = secretValidation.message;

@@ -1,0 +1,58 @@
+name: Database Migrate
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      task:
+        description: Migration task
+        required: true
+        type: choice
+        options:
+          - drizzle-push
+          - payment-fields-backfill
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    name: Migrate · ${{ inputs.environment }} · ${{ inputs.task }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Drizzle push
+        if: inputs.task == 'drizzle-push'
+        run: npm run db:push -- --force
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Run payment fields backfill
+        if: inputs.task == 'payment-fields-backfill'
+        run: npm run db:migrate-payments
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Migration summary
+        run: |
+          echo "### Database migration complete" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Environment: \`${{ inputs.environment }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Task: \`${{ inputs.task }}\`" >> "$GITHUB_STEP_SUMMARY"

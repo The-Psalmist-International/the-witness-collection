@@ -321,7 +321,8 @@ export async function addDiscount(formData: FormData) {
     value,
     scope: scope as DiscountScope,
     code: scope === "secret" ? code : undefined,
-    productIds,
+    productIds:
+      scope === "product" || scope === "secret" ? productIds : [],
     isActive,
     startsAt,
     endsAt,

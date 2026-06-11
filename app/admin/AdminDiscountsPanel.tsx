@@ -27,10 +27,36 @@ function formatDiscountValue(discount: DiscountRecord) {
   return `GHS ${discount.value}`;
 }
 
-function formatScope(scope: DiscountRecord["scope"]) {
-  if (scope === "general") return "General";
-  if (scope === "product") return "Product";
-  return "Secret code";
+function formatScope(discount: DiscountRecord, products: ProductRecord[]) {
+  if (discount.scope === "general") return "General";
+  if (discount.scope === "product") {
+    return discount.productIds.length === 1
+      ? "1 product"
+      : `${discount.productIds.length} products`;
+  }
+
+  if (discount.productIds.length === 0) {
+    return "Secret · whole order";
+  }
+
+  const names = discount.productIds
+    .map((id) => products.find((product) => product.id === id)?.name)
+    .filter(Boolean)
+    .slice(0, 2);
+
+  if (discount.productIds.length === 1 && names[0]) {
+    return `Secret · ${names[0]}`;
+  }
+
+  if (names.length > 0) {
+    const suffix =
+      discount.productIds.length > 2
+        ? ` +${discount.productIds.length - 2}`
+        : "";
+    return `Secret · ${names.join(", ")}${suffix}`;
+  }
+
+  return `Secret · ${discount.productIds.length} products`;
 }
 
 function formatSchedule(discount: DiscountRecord) {
@@ -173,7 +199,7 @@ export function AdminDiscountsPanel({
                       {formatDiscountValue(discount)}
                     </td>
                     <td className="px-4 py-4 text-neutral-600">
-                      {formatScope(discount.scope)}
+                      {formatScope(discount, products)}
                     </td>
                     <td className="px-4 py-4 text-neutral-600">
                       {discount.code ?? "—"}

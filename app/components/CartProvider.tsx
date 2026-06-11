@@ -302,7 +302,10 @@ function CartDrawer({
         ) : state.status !== "success" ? (
         <form
           id="preorder-form"
-          action={formAction}
+          onSubmit={(event) => {
+            event.preventDefault();
+            formAction(new FormData(event.currentTarget));
+          }}
           encType="multipart/form-data"
           className="flex min-h-0 flex-1 flex-col"
         >
@@ -658,7 +661,8 @@ function CartDrawer({
                   </p>
                 ) : null}
                 <p className="text-xs text-neutral-500">
-                  General and product discounts are applied automatically.
+                  General and product discounts apply automatically. Some codes
+                  only apply to selected products.
                 </p>
               </div>
 

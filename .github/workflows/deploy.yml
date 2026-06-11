@@ -1,0 +1,110 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Deployment target
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+
+concurrency:
+  group: deploy-${{ github.event.workflow_run.head_branch || github.ref_name }}-${{ inputs.environment || 'auto' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  resolve-target:
+    name: Resolve deployment target
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       (github.event.workflow_run.head_branch == 'main' ||
+        github.event.workflow_run.head_branch == 'develop'))
+    outputs:
+      environment: ${{ steps.target.outputs.environment }}
+      git-ref: ${{ steps.target.outputs.git-ref }}
+    steps:
+      - name: Determine target environment
+        id: target
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ENV="${{ inputs.environment }}"
+            if [ "$ENV" = "production" ]; then
+              REF="main"
+            else
+              REF="develop"
+            fi
+          elif [ "${{ github.event.workflow_run.head_branch }}" = "main" ]; then
+            ENV="production"
+            REF="main"
+          else
+            ENV="staging"
+            REF="develop"
+          fi
+
+          echo "environment=${ENV}" >> "$GITHUB_OUTPUT"
+          echo "git-ref=${REF}" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: Deploy · ${{ needs.resolve-target.outputs.environment }}
+    needs: resolve-target
+    runs-on: ubuntu-latest
+    environment: ${{ needs.resolve-target.outputs.environment }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve-target.outputs.git-ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for deployment
+        run: npm run build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ADMIN_SESSION_SECRET: ${{ secrets.ADMIN_SESSION_SECRET }}
+          CUSTOMER_SESSION_SECRET: ${{ secrets.CUSTOMER_SESSION_SECRET }}
+          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM_EMAIL: ${{ secrets.SMTP_FROM_EMAIL }}
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: ${{ needs.resolve-target.outputs.environment == 'production' && '--prod' || '' }}
+          working-directory: ./
+
+      - name: Post-deploy summary
+        run: |
+          echo "### Deployment complete" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Environment: \`${{ needs.resolve-target.outputs.environment }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Git ref: \`${{ needs.resolve-target.outputs.git-ref }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- App URL: ${{ vars.NEXT_PUBLIC_APP_URL }}" >> "$GITHUB_STEP_SUMMARY"
