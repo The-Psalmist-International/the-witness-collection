@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { useState } from "react";
+import { motion } from "framer-motion";
 import Image from "next/image";
 import { PromoBanner, HeaderContent } from "@/app/components/Navbar";
 import { FooterSection } from "@/app/components/FooterSection";

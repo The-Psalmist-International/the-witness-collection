@@ -7,7 +7,6 @@ import {
   isCustomerAuthConfigured,
 } from "@/app/lib/customer/auth";
 import {
-  initialCustomerAuthState,
   type CustomerAuthState,
 } from "@/app/lib/customer/types";
 import {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type AdminSearchBarProps = {
   placeholder?: string;
@@ -14,11 +14,14 @@ export function AdminSearchBar({
 }: AdminSearchBarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [value, setValue] = useState(searchParams.get(paramName) ?? "");
+  const paramValue = searchParams.get(paramName) ?? "";
+  const [value, setValue] = useState(paramValue);
 
-  useEffect(() => {
-    setValue(searchParams.get(paramName) ?? "");
-  }, [paramName, searchParams]);
+  const [prevParamValue, setPrevParamValue] = useState(paramValue);
+  if (paramValue !== prevParamValue) {
+    setValue(paramValue);
+    setPrevParamValue(paramValue);
+  }
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
