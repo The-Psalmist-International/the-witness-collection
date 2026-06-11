@@ -53,7 +53,7 @@ jobs:
       DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci
       ADMIN_SESSION_SECRET: ci-admin-session-secret-min-32-characters
       CUSTOMER_SESSION_SECRET: ci-customer-session-secret-min-32-chars
-      NEXT_PUBLIC_APP_URL: ${{ matrix.target == 'production' && 'https://thewitnesscollection.com' || 'https://staging.thewitnesscollection.com' }}
+      NEXT_PUBLIC_APP_URL: ${{ matrix.target == 'production' && 'https://thewitness-collection.com' || 'https://staging.thewitness-collection.com' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
