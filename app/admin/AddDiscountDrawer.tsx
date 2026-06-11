@@ -198,6 +198,38 @@ export function AddDiscountDrawer({
           <input type="hidden" name="productIds" value="" />
         )}
 
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="discountStartsAt"
+              className="text-xs font-medium uppercase tracking-widest text-neutral-500"
+            >
+              Starts (optional)
+            </label>
+            <input
+              id="discountStartsAt"
+              name="startsAt"
+              type="datetime-local"
+              className="h-10 w-full rounded-md border border-neutral-200 px-3 text-sm outline-none focus:border-purple-950"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="discountEndsAt"
+              className="text-xs font-medium uppercase tracking-widest text-neutral-500"
+            >
+              Ends (optional)
+            </label>
+            <input
+              id="discountEndsAt"
+              name="endsAt"
+              type="datetime-local"
+              className="h-10 w-full rounded-md border border-neutral-200 px-3 text-sm outline-none focus:border-purple-950"
+            />
+          </div>
+        </div>
+
         <div className="flex flex-col gap-2">
           <label
             htmlFor="discountMaxUses"

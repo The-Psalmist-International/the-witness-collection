@@ -1,19 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { BrandLogo } from "@/app/components/BrandLogo";
 
 export function FooterSection() {
   return (
     <footer className="w-full bg-[#0a0a0a] text-white py-12 md:py-16 px-6 md:px-10 lg:px-12 flex-shrink-0 text-left border-t border-neutral-900">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between gap-12 lg:gap-24">
         <div className="flex flex-col gap-4 max-w-sm">
-          <div className="text-xl md:text-2xl font-medium tracking-tight flex items-center gap-3">
-            <div
-              className="w-5 h-5 bg-white rounded-[4px]"
-              style={{ clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 80%)" }}
-            />
-            The Witness Collection
-          </div>
+          <BrandLogo
+            size="sm"
+            wordmarkClassName="text-xl md:text-2xl font-medium tracking-tight"
+          />
           <p className="text-xs md:text-sm text-neutral-400 font-light mt-1">
             The Witness Collection - Discover quality products with fast shipping and secure checkout.
           </p>

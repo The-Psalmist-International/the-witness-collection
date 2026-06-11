@@ -1,11 +1,10 @@
-import type { DiscountRecord } from "@/app/lib/discounts/types";
+import type { DiscountRecord, ProductDisplayPricing } from "@/app/lib/discounts/types";
 import type { CartItem } from "@/app/lib/preorders/types";
 import { formatGhsAmount, parsePriceLabel } from "@/app/lib/preorders/utils";
 
 function getLineSubtotal(item: CartItem) {
   return parsePriceLabel(item.price) * item.quantity;
 }
-
 function getCartSubtotal(items: CartItem[]) {
   return items.reduce((sum, item) => sum + getLineSubtotal(item), 0);
 }
@@ -169,4 +168,65 @@ export function validateSecretDiscountCode(
   }
 
   return { ok: true as const, discount };
+}
+
+function getUnitDiscountAmount(
+  unitPrice: number,
+  productId: string,
+  discounts: DiscountRecord[]
+) {
+  const productDiscounts = getProductDiscounts(discounts);
+  const generalDiscount = findGeneralDiscount(discounts);
+
+  let discountAmount = 0;
+  const productDiscount = productDiscounts.find((discount) =>
+    discount.productIds.includes(productId)
+  );
+
+  if (productDiscount) {
+    discountAmount += applyAmountDiscount(unitPrice, productDiscount);
+  }
+
+  const remaining = Math.max(unitPrice - discountAmount, 0);
+
+  if (generalDiscount) {
+    discountAmount += applyAmountDiscount(remaining, generalDiscount);
+  }
+
+  return Math.min(unitPrice, discountAmount);
+}
+
+export function getUnitDisplayPricing(
+  priceLabel: string,
+  productId: string,
+  discounts: DiscountRecord[]
+): ProductDisplayPricing {
+  const unitPrice = parsePriceLabel(priceLabel);
+  const discountAmount = getUnitDiscountAmount(unitPrice, productId, discounts);
+  const finalPrice = Math.max(unitPrice - discountAmount, 0);
+
+  return {
+    originalLabel: priceLabel,
+    discountedLabel: formatGhsAmount(finalPrice),
+    hasDiscount: discountAmount > 0,
+  };
+}
+
+export function getLineDisplayPricing(
+  priceLabel: string,
+  productId: string,
+  quantity: number,
+  discounts: DiscountRecord[]
+): ProductDisplayPricing {
+  const unitPrice = parsePriceLabel(priceLabel);
+  const lineSubtotal = unitPrice * quantity;
+  const unitDiscount = getUnitDiscountAmount(unitPrice, productId, discounts);
+  const discountAmount = Math.min(lineSubtotal, unitDiscount * quantity);
+  const finalPrice = Math.max(lineSubtotal - discountAmount, 0);
+
+  return {
+    originalLabel: formatGhsAmount(lineSubtotal),
+    discountedLabel: formatGhsAmount(finalPrice),
+    hasDiscount: discountAmount > 0,
+  };
 }

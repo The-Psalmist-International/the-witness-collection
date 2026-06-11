@@ -32,3 +32,9 @@ export type CheckoutPricing = {
   productDiscountAmount: number;
   orderDiscountAmount: number;
 };
+
+export type ProductDisplayPricing = {
+  originalLabel: string;
+  discountedLabel: string;
+  hasDiscount: boolean;
+};

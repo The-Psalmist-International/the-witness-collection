@@ -15,7 +15,18 @@ const NAV_ITEMS: {
   exact: boolean;
 }[] = [
   { href: "/admin", label: "Dashboard", permission: "dashboard", exact: true },
-  { href: "/admin/orders", label: "Orders", permission: "orders", exact: false },
+  {
+    href: "/admin/orders",
+    label: "Orders",
+    permission: "orders",
+    exact: false,
+  },
+  {
+    href: "/admin/payments",
+    label: "Payments",
+    permission: "payments",
+    exact: false,
+  },
   {
     href: "/admin/products",
     label: "Products",

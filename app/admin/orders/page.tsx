@@ -1,5 +1,7 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AdminOrdersTable } from "@/app/admin/AdminOrdersTable";
+import { AdminSearchBar } from "@/app/admin/AdminSearchBar";
 import { AdminShell } from "@/app/admin/AdminShell";
 import type { Preorder } from "@/app/lib/db/schema";
 import { parsePageParam } from "@/app/lib/admin/pagination";
@@ -10,7 +12,7 @@ import { listPreordersPaginated } from "@/app/lib/preorders/data";
 export const dynamic = "force-dynamic";
 
 type OrdersPageProps = {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; q?: string }>;
 };
 
 export default async function AdminOrdersPage({ searchParams }: OrdersPageProps) {
@@ -23,6 +25,7 @@ export default async function AdminOrdersPage({ searchParams }: OrdersPageProps)
   const guardedSession = await requireAdminPageAccess("orders");
   const params = await searchParams;
   const page = parsePageParam(params.page);
+  const query = params.q?.trim() ?? "";
 
   let databaseError = "";
   let result: {
@@ -40,7 +43,7 @@ export default async function AdminOrdersPage({ searchParams }: OrdersPageProps)
   };
 
   try {
-    result = await listPreordersPaginated(page);
+    result = await listPreordersPaginated(page, undefined, query || undefined);
   } catch (error) {
     databaseError =
       error instanceof Error && error.message.includes("DATABASE_URL")
@@ -64,6 +67,12 @@ export default async function AdminOrdersPage({ searchParams }: OrdersPageProps)
         </div>
       </div>
 
+      <div className="mt-6">
+        <Suspense fallback={null}>
+          <AdminSearchBar placeholder="Search by reference, name, email, or phone…" />
+        </Suspense>
+      </div>
+
       {databaseError ? (
         <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           {databaseError}
@@ -71,6 +80,7 @@ export default async function AdminOrdersPage({ searchParams }: OrdersPageProps)
       ) : (
         <AdminOrdersTable
           preorders={result.items}
+          searchQuery={query}
           pagination={{
             currentPage: result.currentPage,
             totalPages: result.totalPages,

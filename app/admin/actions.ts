@@ -19,11 +19,19 @@ import {
   PREORDER_STATUSES,
   type PreorderStatus,
 } from "@/app/lib/preorders/constants";
-import { updatePreorderStatus } from "@/app/lib/preorders/data";
-import { PRODUCT_CATEGORIES } from "@/app/lib/products/categories";
 import {
+  confirmPreorderPayment,
+  rejectPreorderPayment,
+  updatePreorderStatus,
+} from "@/app/lib/preorders/data";
+import { PRODUCT_CATEGORIES } from "@/app/lib/products/categories";
+import { buildOrderInvoiceEmail } from "@/app/lib/mailer/templates/orderInvoice";
+import {
+  cancelDiscountNow,
   createDiscount,
+  reactivateDiscount,
   setDiscountActive,
+  suspendDiscount,
 } from "@/app/lib/discounts/data";
 import {
   DISCOUNT_SCOPES,
@@ -134,6 +142,45 @@ export async function changePreorderStatus(
   await updatePreorderStatus(preorderId, status);
   revalidatePath("/admin");
   revalidatePath("/admin/orders");
+}
+
+export async function confirmPaymentAction(preorderId: string) {
+  await requirePermission("payments");
+
+  const preorder = await confirmPreorderPayment(preorderId);
+
+  if (!preorder) {
+    throw new Error("Order not found.");
+  }
+
+  try {
+    const email = buildOrderInvoiceEmail(preorder);
+    await sendAdminEmail({
+      to: preorder.customerEmail,
+      subject: email.subject,
+      html: email.html,
+    });
+  } catch {
+    // Payment is confirmed even if email fails.
+  }
+
+  revalidatePath("/admin/payments");
+  revalidatePath("/admin/orders");
+  revalidatePath("/account/orders");
+}
+
+export async function rejectPaymentAction(preorderId: string) {
+  await requirePermission("payments");
+
+  const preorder = await rejectPreorderPayment(preorderId);
+
+  if (!preorder) {
+    throw new Error("Order not found.");
+  }
+
+  revalidatePath("/admin/payments");
+  revalidatePath("/admin/orders");
+  revalidatePath("/account/orders");
 }
 
 function parseProductFormData(formData: FormData) {
@@ -251,6 +298,23 @@ export async function addDiscount(formData: FormData) {
     throw new Error("Select at least one product for a product discount.");
   }
 
+  const startsAtRaw = String(formData.get("startsAt") ?? "").trim();
+  const endsAtRaw = String(formData.get("endsAt") ?? "").trim();
+  const startsAt = startsAtRaw ? new Date(startsAtRaw) : null;
+  const endsAt = endsAtRaw ? new Date(endsAtRaw) : null;
+
+  if (startsAtRaw && (!startsAt || Number.isNaN(startsAt.getTime()))) {
+    throw new Error("Enter a valid start date and time.");
+  }
+
+  if (endsAtRaw && (!endsAt || Number.isNaN(endsAt.getTime()))) {
+    throw new Error("Enter a valid end date and time.");
+  }
+
+  if (startsAt && endsAt && endsAt <= startsAt) {
+    throw new Error("End date must be after the start date.");
+  }
+
   await createDiscount({
     name,
     type: type as DiscountType,
@@ -259,15 +323,41 @@ export async function addDiscount(formData: FormData) {
     code: scope === "secret" ? code : undefined,
     productIds,
     isActive,
+    startsAt,
+    endsAt,
     maxUses: maxUsesRaw ? Number(maxUsesRaw) : null,
     createdBy: session.userId,
   });
 
+  revalidateDiscountPages();
+}
+
+function revalidateDiscountPages() {
   revalidatePath("/admin/discounts");
+  revalidatePath("/shop");
+  revalidatePath("/");
 }
 
 export async function toggleDiscountActive(discountId: string, isActive: boolean) {
   await requirePermission("discounts");
   await setDiscountActive(discountId, isActive);
-  revalidatePath("/admin/discounts");
+  revalidateDiscountPages();
+}
+
+export async function suspendDiscountAction(discountId: string) {
+  await requirePermission("discounts");
+  await suspendDiscount(discountId);
+  revalidateDiscountPages();
+}
+
+export async function reactivateDiscountAction(discountId: string) {
+  await requirePermission("discounts");
+  await reactivateDiscount(discountId);
+  revalidateDiscountPages();
+}
+
+export async function cancelDiscountAction(discountId: string) {
+  await requirePermission("discounts");
+  await cancelDiscountNow(discountId);
+  revalidateDiscountPages();
 }

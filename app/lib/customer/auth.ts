@@ -131,6 +131,7 @@ export async function verifyCustomerSession(): Promise<CustomerSession> {
       firstName: user.firstName,
       lastName: user.lastName,
       phone: user.phone,
+      billingAddress: user.billingAddress,
     };
   } catch {
     return { isAuthenticated: false };

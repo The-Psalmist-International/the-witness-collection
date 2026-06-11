@@ -1,11 +1,21 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useTransition } from "react";
 import { changePreorderStatus } from "@/app/admin/actions";
+import { PaymentProofPreview } from "@/app/admin/PaymentProofPreview";
 import { AdminDrawer } from "@/app/admin/AdminDrawer";
+import { OrderInvoiceView } from "@/app/components/OrderInvoiceView";
 import type { Preorder } from "@/app/lib/db/schema";
-import { PREORDER_STATUSES } from "@/app/lib/preorders/constants";
+import { getPaymentStatusLabel } from "@/app/lib/payments/constants";
+import { formatOrderReference } from "@/app/lib/payments/reference";
+import {
+  getStatusesForFulfillment,
+  getStatusLabel,
+  type FulfillmentType,
+  type PreorderStatus,
+} from "@/app/lib/preorders/constants";
 
 type OrderDetailDrawerProps = {
   preorder: Preorder | null;
@@ -35,12 +45,12 @@ export function OrderDetailDrawer({ preorder, onClose }: OrderDetailDrawerProps)
     return null;
   }
 
-  const handleStatusChange = (status: string) => {
+  const fulfillmentType = (preorder.fulfillmentType ?? "delivery") as FulfillmentType;
+  const statusOptions = getStatusesForFulfillment(fulfillmentType);
+
+  const handleStatusChange = (status: PreorderStatus) => {
     startTransition(async () => {
-      await changePreorderStatus(
-        preorder.id,
-        status as (typeof PREORDER_STATUSES)[number]
-      );
+      await changePreorderStatus(preorder.id, status);
     });
   };
 
@@ -173,22 +183,65 @@ export function OrderDetailDrawer({ preorder, onClose }: OrderDetailDrawerProps)
 
         <section>
           <h3 className="text-xs font-medium uppercase tracking-widest text-neutral-500">
+            Payment
+          </h3>
+          <dl className="mt-2 rounded-md border border-neutral-200 px-4">
+            <DetailRow
+              label="Reference"
+              value={formatOrderReference(preorder.orderReference, preorder.id)}
+            />
+            <DetailRow
+              label="Status"
+              value={getPaymentStatusLabel(preorder.paymentStatus)}
+            />
+            {preorder.invoiceNumber ? (
+              <DetailRow label="Invoice" value={preorder.invoiceNumber} />
+            ) : null}
+          </dl>
+
+          {preorder.paymentProofUrl ? (
+            <div className="mt-4">
+              <p className="mb-2 text-xs font-medium uppercase tracking-widest text-neutral-500">
+                Payment proof
+              </p>
+              <PaymentProofPreview
+                url={preorder.paymentProofUrl}
+                alt={`Payment proof for ${formatOrderReference(preorder.orderReference, preorder.id)}`}
+              />
+            </div>
+          ) : null}
+
+          {preorder.paymentStatus === "confirmed" ? (
+            <div className="mt-6">
+              <OrderInvoiceView preorder={preorder} />
+              <Link
+                href={`/account/orders/${preorder.id}/invoice`}
+                className="mt-4 inline-flex text-sm font-medium text-purple-950 hover:underline"
+              >
+                Open customer invoice page
+              </Link>
+            </div>
+          ) : null}
+        </section>
+
+        <section>
+          <h3 className="text-xs font-medium uppercase tracking-widest text-neutral-500">
             Status
           </h3>
           <div className="mt-3 flex flex-wrap gap-2">
-            {PREORDER_STATUSES.map((status) => (
+            {statusOptions.map((status) => (
               <button
                 key={status}
                 type="button"
                 disabled={pending}
                 onClick={() => handleStatusChange(status)}
-                className={`rounded-full px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
+                className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                   preorder.status === status
                     ? "bg-purple-950 text-white"
                     : "border border-neutral-200 text-black hover:border-purple-950"
                 }`}
               >
-                {status}
+                {getStatusLabel(status)}
               </button>
             ))}
           </div>

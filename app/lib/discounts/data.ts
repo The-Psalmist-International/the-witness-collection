@@ -88,6 +88,44 @@ export async function setDiscountActive(discountId: string, isActive: boolean) {
     .where(eq(discounts.id, discountId));
 }
 
+export async function suspendDiscount(discountId: string) {
+  await setDiscountActive(discountId, false);
+}
+
+export async function reactivateDiscount(discountId: string) {
+  const discount = await getDiscountById(discountId);
+
+  if (!discount) {
+    throw new Error("Discount not found.");
+  }
+
+  const now = new Date();
+
+  if (discount.endsAt && discount.endsAt <= now) {
+    throw new Error("This discount has ended and cannot be reactivated.");
+  }
+
+  if (discount.startsAt && discount.startsAt > now) {
+    await setDiscountActive(discountId, true);
+    return;
+  }
+
+  await setDiscountActive(discountId, true);
+}
+
+export async function cancelDiscountNow(discountId: string) {
+  const now = new Date();
+
+  await getDb()
+    .update(discounts)
+    .set({
+      isActive: false,
+      endsAt: now,
+      updatedAt: now,
+    })
+    .where(eq(discounts.id, discountId));
+}
+
 export async function incrementDiscountUsage(discountId: string) {
   await getDb()
     .update(discounts)

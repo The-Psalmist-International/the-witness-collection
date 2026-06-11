@@ -38,7 +38,17 @@ export async function loginAdmin(
     };
   }
 
-  await bootstrapAdminUser();
+  try {
+    await bootstrapAdminUser();
+  } catch (error) {
+    return {
+      status: "error",
+      message:
+        error instanceof Error
+          ? error.message
+          : "Database is unavailable. Check DATABASE_URL and run npm run db:push.",
+    };
+  }
 
   const authResult = await authenticateAdminLogin(email, password);
 

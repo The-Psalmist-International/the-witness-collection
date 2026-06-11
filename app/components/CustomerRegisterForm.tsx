@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useEffect, useRef } from "react";
 import { registerCustomer } from "@/app/actions/customer-auth";
+import { LocationAutocomplete } from "@/app/components/LocationAutocomplete";
 import {
   initialCustomerAuthState,
   type CustomerAuthState,
@@ -49,7 +50,7 @@ export function CustomerRegisterForm({
             name="firstName"
             type="text"
             required
-            className="h-12 rounded-xl border border-neutral-200 px-4 text-sm outline-none transition-colors focus:border-purple-950"
+            className="h-12 w-full rounded-xl border border-neutral-200 px-4 text-sm outline-none transition-colors focus:border-purple-950"
           />
         </div>
 
@@ -62,7 +63,7 @@ export function CustomerRegisterForm({
             name="lastName"
             type="text"
             required
-            className="h-12 rounded-xl border border-neutral-200 px-4 text-sm outline-none transition-colors focus:border-purple-950"
+            className="h-12 w-full rounded-xl border border-neutral-200 px-4 text-sm outline-none transition-colors focus:border-purple-950"
           />
         </div>
       </div>
@@ -77,7 +78,7 @@ export function CustomerRegisterForm({
           type="email"
           required
           autoComplete="email"
-          className="h-12 rounded-xl border border-neutral-200 px-4 text-sm outline-none transition-colors focus:border-purple-950"
+          className="h-12 w-full rounded-xl border border-neutral-200 px-4 text-sm outline-none transition-colors focus:border-purple-950"
         />
       </div>
 
@@ -90,7 +91,23 @@ export function CustomerRegisterForm({
           name="phone"
           type="tel"
           required
-          className="h-12 rounded-xl border border-neutral-200 px-4 text-sm outline-none transition-colors focus:border-purple-950"
+          className="h-12 w-full rounded-xl border border-neutral-200 px-4 text-sm outline-none transition-colors focus:border-purple-950"
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <label
+          htmlFor="billingAddress"
+          className="text-sm font-semibold text-black"
+        >
+          Billing address
+        </label>
+        <LocationAutocomplete
+          id="billingAddress"
+          name="billingAddress"
+          required
+          placeholder="Start typing your billing address"
+          className="h-12 w-full rounded-xl border border-neutral-200 px-4 text-sm outline-none transition-colors focus:border-purple-950"
         />
       </div>
 
@@ -105,7 +122,7 @@ export function CustomerRegisterForm({
           required
           minLength={8}
           autoComplete="new-password"
-          className="h-12 rounded-xl border border-neutral-200 px-4 text-sm outline-none transition-colors focus:border-purple-950"
+          className="h-12 w-full rounded-xl border border-neutral-200 px-4 text-sm outline-none transition-colors focus:border-purple-950"
         />
       </div>
 
@@ -123,7 +140,7 @@ export function CustomerRegisterForm({
           required
           minLength={8}
           autoComplete="new-password"
-          className="h-12 rounded-xl border border-neutral-200 px-4 text-sm outline-none transition-colors focus:border-purple-950"
+          className="h-12 w-full rounded-xl border border-neutral-200 px-4 text-sm outline-none transition-colors focus:border-purple-950"
         />
       </div>
 

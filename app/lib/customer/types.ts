@@ -4,6 +4,7 @@ export type CustomerSessionUser = {
   firstName: string;
   lastName: string;
   phone: string;
+  billingAddress: string | null;
 };
 
 export type CustomerAuthState = {

@@ -12,6 +12,7 @@ type CustomerContextValue = {
   customer: CustomerSessionUser | null;
   isAuthenticated: boolean;
   fullName: string;
+  billingAddress: string | null;
 };
 
 const CustomerContext = createContext<CustomerContextValue | null>(null);
@@ -30,6 +31,7 @@ export function CustomerProvider({
       fullName: initialCustomer
         ? `${initialCustomer.firstName} ${initialCustomer.lastName}`.trim()
         : "",
+      billingAddress: initialCustomer?.billingAddress ?? null,
     }),
     [initialCustomer]
   );

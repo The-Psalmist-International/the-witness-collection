@@ -5,6 +5,7 @@ export type AdminRole = (typeof ADMIN_ROLES)[number];
 export const ADMIN_PERMISSIONS = [
   "dashboard",
   "orders",
+  "payments",
   "products",
   "discounts",
   "users",
@@ -13,8 +14,8 @@ export const ADMIN_PERMISSIONS = [
 export type AdminPermission = (typeof ADMIN_PERMISSIONS)[number];
 
 export const ROLE_PERMISSIONS: Record<AdminRole, AdminPermission[]> = {
-  admin: ["dashboard", "orders", "products", "discounts", "users"],
-  store_manager: ["orders", "products"],
+  admin: ["dashboard", "orders", "payments", "products", "discounts", "users"],
+  store_manager: ["orders", "payments", "products"],
   general_team: ["products"],
 };
 
@@ -39,6 +40,10 @@ export function getDefaultAdminPath(role: AdminRole) {
 
   if (hasPermission(role, "orders")) {
     return "/admin/orders";
+  }
+
+  if (hasPermission(role, "payments")) {
+    return "/admin/payments";
   }
 
   return "/admin/products";

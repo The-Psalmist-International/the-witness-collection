@@ -17,6 +17,7 @@ export const customers = pgTable("customers", {
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   phone: text("phone").notNull(),
+  billingAddress: text("billing_address"),
   passwordHash: text("password_hash").notNull(),
   status: varchar("status", { length: 16 }).notNull().default("active"),
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -70,6 +71,17 @@ export const preorders = pgTable("preorders", {
     onDelete: "set null",
   }),
   totalLabel: varchar("total_label", { length: 64 }).notNull(),
+  orderReference: varchar("order_reference", { length: 32 }).unique(),
+  paymentStatus: varchar("payment_status", { length: 32 })
+    .notNull()
+    .default("pending_confirmation"),
+  paymentProofUrl: text("payment_proof_url"),
+  paymentProofUploadedAt: timestamp("payment_proof_uploaded_at", {
+    withTimezone: true,
+  }),
+  paymentConfirmedAt: timestamp("payment_confirmed_at", { withTimezone: true }),
+  invoiceNumber: varchar("invoice_number", { length: 32 }).unique(),
+  invoiceIssuedAt: timestamp("invoice_issued_at", { withTimezone: true }),
   status: varchar("status", { length: 32 }).notNull().default("pending"),
   source: varchar("source", { length: 32 }).notNull().default("site_cart"),
   createdAt: timestamp("created_at", { withTimezone: true })

@@ -3,7 +3,6 @@
 import { redirect } from "next/navigation";
 import { validatePasswordStrength } from "@/app/lib/admin/password";
 import {
-  clearCustomerSession,
   createCustomerSession,
   isCustomerAuthConfigured,
 } from "@/app/lib/customer/auth";
@@ -27,6 +26,7 @@ export async function registerCustomer(
   const lastName = String(formData.get("lastName") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const phone = String(formData.get("phone") ?? "").trim();
+  const billingAddress = String(formData.get("billingAddress") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const confirmPassword = String(formData.get("confirmPassword") ?? "");
   const redirectTo = String(formData.get("redirectTo") ?? "").trim() || "/shop";
@@ -38,10 +38,11 @@ export async function registerCustomer(
     };
   }
 
-  if (!firstName || !lastName || !email || !phone) {
+  if (!firstName || !lastName || !email || !phone || !billingAddress) {
     return {
       status: "error",
-      message: "Enter your first name, last name, email, and phone number.",
+      message:
+        "Enter your first name, last name, email, phone number, and billing address.",
     };
   }
 
@@ -73,6 +74,7 @@ export async function registerCustomer(
     firstName,
     lastName,
     phone,
+    billingAddress,
     password,
   });
 
@@ -89,6 +91,7 @@ export async function registerCustomer(
     firstName: user.firstName,
     lastName: user.lastName,
     phone: user.phone,
+    billingAddress: user.billingAddress,
   });
 
   redirect(redirectTo);
@@ -129,12 +132,8 @@ export async function loginCustomer(
     firstName: user.firstName,
     lastName: user.lastName,
     phone: user.phone,
+    billingAddress: user.billingAddress,
   });
 
   redirect(redirectTo);
-}
-
-export async function logoutCustomer() {
-  await clearCustomerSession();
-  redirect("/shop");
 }

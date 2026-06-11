@@ -17,6 +17,7 @@ type LocationAutocompleteProps = {
   required?: boolean;
   placeholder?: string;
   className?: string;
+  defaultValue?: string;
 };
 
 type DropdownPosition = {
@@ -32,11 +33,12 @@ export function LocationAutocomplete({
   required = false,
   placeholder = "Start typing your delivery address",
   className,
+  defaultValue = "",
 }: LocationAutocompleteProps) {
   const listboxId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(defaultValue);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -239,7 +241,7 @@ export function LocationAutocomplete({
     );
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative w-full">
       <input
         ref={inputRef}
         id={id}
@@ -261,7 +263,7 @@ export function LocationAutocomplete({
           }
         }}
         onKeyDown={handleKeyDown}
-        className={className}
+        className={`w-full ${className ?? ""}`.trim()}
       />
 
       {isLoading && (

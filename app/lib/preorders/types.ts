@@ -13,6 +13,8 @@ export type CreatePreorderState = {
   status: "idle" | "success" | "error";
   message: string;
   preorderId?: string;
+  orderReference?: string;
+  paymentStatus?: string;
   fieldErrors?: Partial<{
     customerName: string;
     customerEmail: string;
@@ -21,6 +23,7 @@ export type CreatePreorderState = {
     customerLocation: string;
     items: string;
     discountCode: string;
+    paymentProof: string;
     auth: string;
   }>;
 };

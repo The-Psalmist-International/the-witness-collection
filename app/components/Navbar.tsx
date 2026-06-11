@@ -3,39 +3,20 @@
 import Link from "next/link";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { BrandLogo } from "./BrandLogo";
+import { PromoBanner } from "./PromoBanner";
 import { useCart } from "./CartProvider";
+import { useCustomer } from "./CustomerProvider";
 
-export function PromoBanner() {
-  return (
-    <div className="w-full bg-[#3b0764] relative overflow-hidden text-white text-center py-3 px-4 text-xs font-medium tracking-wide">
-      <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay">
-        <svg
-          viewBox="0 0 200 200"
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-full"
-          preserveAspectRatio="none"
-        >
-          <filter id="noiseFilterBanner">
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.9"
-              numOctaves="3"
-              stitchTiles="stitch"
-            />
-          </filter>
-          <rect width="100%" height="100%" filter="url(#noiseFilterBanner)" />
-        </svg>
-      </div>
-      <span className="relative z-10 text-sm font-normal">
-        All items are currently on pre-order.
-      </span>
-    </div>
-  );
-}
+export { PromoBanner };
 
 export function HeaderContent() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { cartQuantity, openCart } = useCart();
+  const { isAuthenticated } = useCustomer();
+  const profileHref = isAuthenticated
+    ? "/account/settings/profile"
+    : "/account/login?redirect=/account/settings/profile";
 
   const navLinks = [
     { name: "Home", href: "/" },
@@ -47,16 +28,12 @@ export function HeaderContent() {
 
   return (
     <>
-      <Link
+      <BrandLogo
         href="/"
-        className="pressable relative z-50 flex items-center justify-center gap-2 text-lg font-light tracking-tight transition-opacity hover:opacity-70 active:opacity-50 md:text-lg"
-      >
-        <div
-          className="w-5 h-5 bg-purple-950 rounded-[4px]"
-          style={{ clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 80%)" }}
-        />
-        The Witness Collection
-      </Link>
+        size="sm"
+        className="relative z-50"
+        wordmarkClassName="text-lg font-light tracking-tight md:text-lg"
+      />
 
       <nav className="hidden md:flex space-x-8 text-sm font-normal">
         {navLinks.map((link) => (
@@ -86,6 +63,26 @@ export function HeaderContent() {
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
         </button>
+
+        <Link
+          href={profileHref}
+          aria-label={isAuthenticated ? "Account settings" : "Sign in"}
+          className="pressable relative p-2 transition-opacity hover:opacity-50 active:opacity-30"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        </Link>
 
         <button
           type="button"
