@@ -32,7 +32,6 @@ const cardVariants = {
 
 function QuantityControls({
   productName,
-  productId: _productId,
   cartQuantity,
   onDecrease,
   onIncrease,
@@ -73,7 +72,6 @@ function QuantityControls({
 }
 
 function SizeButtons({
-  product: _product,
   availableSizes,
   selectedSize,
   onSelectSize,
