@@ -32,7 +32,7 @@ export function HeaderContent() {
         href="/"
         size="sm"
         className="relative z-50"
-        wordmarkClassName="text-lg font-light tracking-tight md:text-lg"
+        wordmarkClassName="text-sm font-light tracking-tight md:text-lg"
       />
 
       <nav className="hidden md:flex space-x-8 text-sm font-normal">

@@ -59,7 +59,7 @@ export function AdminUsersPanel({
         </AdminButton>
       </div>
 
-      <div className="relative overflow-hidden rounded-md border border-neutral-200 bg-white">
+      <div className="overflow-x-auto rounded-md border border-neutral-200 bg-white">
         {users.length === 0 ? (
           <div className="px-6 py-12 text-center">
             <p className="text-sm font-medium text-black">No team members yet.</p>

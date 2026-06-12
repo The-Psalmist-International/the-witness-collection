@@ -75,7 +75,7 @@ export function AdminOrdersTable({
 
   return (
     <>
-      <div className="relative overflow-hidden rounded-md border border-neutral-200 bg-white">
+      <div className="relative overflow-x-auto rounded-md border border-neutral-200 bg-white">
         <div className="hidden overflow-x-auto lg:block">
           <table className="w-full min-w-[1280px] text-left">
             <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase tracking-widest text-neutral-500">
