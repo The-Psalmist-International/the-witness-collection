@@ -290,12 +290,14 @@ function CartDrawer({
               <div className="mt-8 flex flex-col gap-3">
                 <Link
                   href="/account/login?redirect=/shop"
+                  onClick={closeCart}
                   className="inline-flex h-11 items-center justify-center rounded-full bg-black px-5 text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
                 >
                   Sign in
                 </Link>
                 <Link
                   href="/account/register?redirect=/shop"
+                  onClick={closeCart}
                   className="inline-flex h-11 items-center justify-center rounded-full border border-neutral-200 px-5 text-sm font-semibold text-black transition-colors hover:border-black"
                 >
                   Create account
