@@ -16,6 +16,7 @@ import { previewCheckoutPricing } from "@/app/actions/checkout";
 import { createPreorder } from "@/app/actions/preorders";
 import { useCustomer } from "@/app/components/CustomerProvider";
 import { CheckoutContactAccordion } from "@/app/components/CheckoutContactAccordion";
+import { CheckoutPaymentTabs } from "@/app/components/CheckoutPaymentTabs";
 import { DiscountAppliedNotice } from "@/app/components/DiscountAppliedNotice";
 import { CartLinePrice } from "@/app/components/ProductPrice";
 import { LocationAutocomplete } from "@/app/components/LocationAutocomplete";
@@ -29,7 +30,6 @@ import {
   type FulfillmentType,
 } from "@/app/lib/preorders/constants";
 import {
-  PAYMENT_BANK_DETAILS,
   PAYMENT_INSTRUCTIONS,
 } from "@/app/lib/payments/constants";
 import {
@@ -151,11 +151,15 @@ function CartDrawer({
 
     let cancelled = false;
 
-    void previewCheckoutPricing(items, discountCode).then((nextPricing) => {
-      if (!cancelled) {
-        setPricing(nextPricing);
-      }
-    });
+    void previewCheckoutPricing(items, discountCode)
+      .then((nextPricing) => {
+        if (!cancelled) {
+          setPricing(nextPricing);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to preview checkout pricing:", error);
+      });
 
     return () => {
       cancelled = true;
@@ -325,27 +329,7 @@ function CartDrawer({
                   </p>
                 </div>
 
-                <div className="rounded-md border border-purple-100 bg-purple-50 px-4 py-4 text-sm leading-6 text-purple-950">
-                  <p className="font-medium">Bank details</p>
-                  <dl className="mt-3 space-y-2">
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-purple-900/70">Bank</dt>
-                      <dd>{PAYMENT_BANK_DETAILS.bankName}</dd>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-purple-900/70">Account name</dt>
-                      <dd>{PAYMENT_BANK_DETAILS.accountName}</dd>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-purple-900/70">Account number</dt>
-                      <dd>{PAYMENT_BANK_DETAILS.accountNumber}</dd>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-purple-900/70">Branch</dt>
-                      <dd>{PAYMENT_BANK_DETAILS.branch}</dd>
-                    </div>
-                  </dl>
-                </div>
+                <CheckoutPaymentTabs />
 
                 <ul className="space-y-2 text-sm leading-6 text-neutral-600">
                   {PAYMENT_INSTRUCTIONS.map((instruction) => (
@@ -955,6 +939,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         <PreorderSuccessCelebration
           message={state.message}
           orderReference={state.orderReference}
+          totalLabel={state.totalLabel}
+          customerName={state.customerName}
+          createdAt={state.createdAt}
           onClose={handleSuccessClose}
         />
       )}

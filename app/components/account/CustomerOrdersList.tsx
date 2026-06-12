@@ -162,7 +162,7 @@ export function CustomerOrdersList({ orders }: { orders: CustomerOrder[] }) {
             className="rounded-xl border border-neutral-200 p-5"
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-xs font-medium uppercase tracking-widest text-neutral-500">
                   {formatDate(order.createdAt)}
                 </p>
@@ -174,19 +174,19 @@ export function CustomerOrdersList({ orders }: { orders: CustomerOrder[] }) {
                   {order.items.map((item) => item.name).join(", ")}
                 </p>
               </div>
-              <div className="text-right">
+              <div className="shrink-0 text-right">
                 <p className="text-sm font-medium text-black">{order.totalLabel}</p>
                 {order.discountLabel ? (
                   <p className="mt-1 text-xs text-purple-950">
                     Saved {order.discountLabel.replace("-", "")}
                   </p>
                 ) : null}
-                <p className="mt-2 inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-900">
+                <span className="mt-2 block whitespace-nowrap rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-900">
                   {getPaymentStatusLabel(order.paymentStatus)}
-                </p>
-                <p className="mt-2 inline-flex rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-950">
+                </span>
+                <span className="mt-2 block whitespace-nowrap rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-950">
                   {getStatusLabel(order.status)}
-                </p>
+                </span>
               </div>
             </div>
 

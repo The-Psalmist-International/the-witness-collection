@@ -247,6 +247,9 @@ export async function createPreorder(
       preorderId: record?.id,
       orderReference: record?.orderReference ?? undefined,
       paymentStatus: record?.paymentStatus,
+      totalLabel: pricing.totalLabel,
+      customerName,
+      createdAt: record?.createdAt.toISOString(),
     };
   } catch (error) {
     const message =

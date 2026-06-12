@@ -15,6 +15,9 @@ export type CreatePreorderState = {
   preorderId?: string;
   orderReference?: string;
   paymentStatus?: string;
+  totalLabel?: string;
+  customerName?: string;
+  createdAt?: string;
   fieldErrors?: Partial<{
     customerName: string;
     customerEmail: string;
