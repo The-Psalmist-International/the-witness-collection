@@ -16,7 +16,7 @@ export function PromoBanner() {
 
   useEffect(() => {
     if (!generalDiscount?.endsAt) {
-      setCountdown("");
+      queueMicrotask(() => setCountdown(""));
       return;
     }
 

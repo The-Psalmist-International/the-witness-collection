@@ -145,7 +145,7 @@ function CartDrawer({
 
   useEffect(() => {
     if (!isOpen || items.length === 0) {
-      setPricing(null);
+      queueMicrotask(() => setPricing(null));
       return;
     }
 
@@ -164,7 +164,7 @@ function CartDrawer({
 
   useEffect(() => {
     if (state.fieldErrors?.paymentProof) {
-      setCheckoutStep("payment");
+      queueMicrotask(() => setCheckoutStep("payment"));
     }
   }, [state.fieldErrors?.paymentProof]);
 

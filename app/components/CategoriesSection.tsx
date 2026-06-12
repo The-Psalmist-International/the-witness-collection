@@ -34,8 +34,6 @@ function CategoryColumn({ category, isSingle }: { category: Category; isSingle: 
   const textRef = useRef<HTMLDivElement>(null);
   const bgRef = useRef<HTMLDivElement>(null);
   const rafId = useRef(0);
-  const lastScrollTop = useRef(0);
-  const lastTranslateY = useRef(0);
 
   useEffect(() => {
     const col = columnRef.current;
