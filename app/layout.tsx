@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Stack_Sans_Headline } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "./components/toast/ToastProvider";
 import { BRAND_LOGO_PATH, BRAND_NAME } from "@/app/lib/brand/logo";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,6 +41,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-stack-sans">
         <ToastProvider>{children}</ToastProvider>
+        <Analytics />
       </body>
     </html>
   );
