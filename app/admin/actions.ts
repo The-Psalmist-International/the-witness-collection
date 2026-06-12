@@ -160,7 +160,8 @@ export async function confirmPaymentAction(preorderId: string) {
       subject: email.subject,
       html: email.html,
     });
-  } catch {
+  } catch (error) {
+    console.error("Failed to send invoice email:", error);
     // Payment is confirmed even if email fails.
   }
 

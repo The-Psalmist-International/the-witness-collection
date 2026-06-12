@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BrandLogo } from "./BrandLogo";
 import { PromoBanner } from "./PromoBanner";
@@ -12,11 +13,30 @@ export { PromoBanner };
 
 export function HeaderContent() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+  
   const { cartQuantity, openCart } = useCart();
   const { isAuthenticated } = useCustomer();
   const profileHref = isAuthenticated
     ? "/account/settings/profile"
     : "/account/login?redirect=/account/settings/profile";
+
+  useEffect(() => {
+    if (isSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isSearchOpen]);
+
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const query = searchInputRef.current?.value;
+    if (query) {
+      router.push(`/shop?q=${encodeURIComponent(query)}`);
+      setIsSearchOpen(false);
+    }
+  };
 
   const navLinks = [
     { name: "Home", href: "/" },
@@ -48,21 +68,51 @@ export function HeaderContent() {
       </nav>
 
       <div className="flex items-center gap-2 relative z-50 text-black">
-        <button type="button" className="pressable p-2 transition-opacity hover:opacity-50 active:opacity-30">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+        <div className="flex items-center">
+          <form
+            onSubmit={handleSearch}
+            className={`flex items-center overflow-hidden transition-all duration-300 ease-in-out ${
+              isSearchOpen ? "w-[120px] md:w-[200px] opacity-100" : "w-0 opacity-0"
+            }`}
           >
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-        </button>
+            <input
+              ref={searchInputRef}
+              type="search"
+              name="q"
+              placeholder="Search..."
+              className="w-full bg-neutral-100 rounded-full py-1.5 px-4 text-sm outline-none border border-neutral-200 focus:border-black transition-colors"
+            />
+          </form>
+          <button 
+            type="button" 
+            onClick={() => setIsSearchOpen(!isSearchOpen)}
+            className="pressable p-2 transition-opacity hover:opacity-50 active:opacity-30"
+            aria-label="Toggle search"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              {isSearchOpen ? (
+                <>
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </>
+              ) : (
+                <>
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </>
+              )}
+            </svg>
+          </button>
+        </div>
 
         <Link
           href={profileHref}

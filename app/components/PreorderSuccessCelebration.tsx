@@ -7,6 +7,9 @@ import { useEffect } from "react";
 type PreorderSuccessCelebrationProps = {
   message: string;
   orderReference?: string;
+  totalLabel?: string;
+  customerName?: string;
+  createdAt?: string;
   onClose: () => void;
 };
 
@@ -62,6 +65,9 @@ function fireConfettiBurst() {
 export function PreorderSuccessCelebration({
   message,
   orderReference,
+  totalLabel,
+  customerName,
+  createdAt,
   onClose,
 }: PreorderSuccessCelebrationProps) {
   const lenis = useLenis();
@@ -78,52 +84,89 @@ export function PreorderSuccessCelebration({
     };
   }, [lenis]);
 
+  const dateString = createdAt
+    ? new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date(createdAt))
+    : "—";
+
   return (
     <div
-      className="fixed inset-0 z-[250] flex items-center justify-center bg-white/85 px-6 backdrop-blur-[2px]"
+      className="fixed inset-0 z-[250] flex items-center justify-center bg-black/40 px-6 backdrop-blur-sm"
       data-lenis-prevent
       role="dialog"
       aria-modal="true"
       aria-labelledby="preorder-success-title"
     >
-      <div className="w-full max-w-md rounded-2xl border border-neutral-100 bg-white px-8 py-10 text-center shadow-2xl">
-        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-purple-50 text-purple-950">
-          <svg
-            width="32"
-            height="32"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
+      <div className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-2xl">
+        {/* Top Section */}
+        <div className="px-8 pb-8 pt-12 text-center">
+          <div className="text-5xl mb-4">🎉</div>
+          <h2
+            id="preorder-success-title"
+            className="text-2xl font-bold tracking-tight text-black"
           >
-            <path d="M20 6 9 17l-5-5" />
-          </svg>
-        </div>
-        <h2
-          id="preorder-success-title"
-          className="text-2xl font-medium tracking-tight text-black"
-        >
-          Order submitted
-        </h2>
-        {orderReference ? (
-          <p className="mt-3 text-sm font-medium text-purple-950">
-            Reference: {orderReference}
+            Thank you!
+          </h2>
+          <p className="mt-2 text-sm text-neutral-500">
+            {message}
           </p>
-        ) : null}
-        <p className="mt-4 text-sm leading-7 text-neutral-600">{message}</p>
-        <p className="mt-3 text-sm leading-7 text-neutral-500">
-          Your invoice will be emailed once payment is confirmed.
-        </p>
-        <button
-          type="button"
-          onClick={onClose}
-          className="pressable mt-8 flex h-11 w-full items-center justify-center rounded-full bg-purple-950 px-5 text-sm font-semibold text-white transition-colors hover:bg-purple-900 active:bg-purple-800"
-        >
-          Continue shopping
-        </button>
+        </div>
+
+        {/* Divider with Notches */}
+        <div className="relative flex items-center justify-between">
+          <div className="h-6 w-6 -translate-x-3 rounded-full bg-neutral-900/40 mix-blend-overlay absolute left-0" style={{ boxShadow: "inset 0 2px 4px rgba(0,0,0,0.1)" }}></div>
+          <div className="w-full border-t-2 border-dashed border-neutral-200 mx-6"></div>
+          <div className="h-6 w-6 translate-x-3 rounded-full bg-neutral-900/40 mix-blend-overlay absolute right-0" style={{ boxShadow: "inset 0 2px 4px rgba(0,0,0,0.1)" }}></div>
+        </div>
+
+        {/* Details Section */}
+        <div className="px-8 py-8">
+          <div className="grid grid-cols-2 gap-y-6 text-sm">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-widest text-neutral-400">Order ID</p>
+              <p className="mt-1 font-semibold text-black">{orderReference || "—"}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs font-medium uppercase tracking-widest text-neutral-400">Amount</p>
+              <p className="mt-1 font-semibold text-black">{totalLabel || "—"}</p>
+            </div>
+            <div className="col-span-2">
+              <p className="text-xs font-medium uppercase tracking-widest text-neutral-400">Date & Time</p>
+              <p className="mt-1 font-semibold text-black">{dateString}</p>
+            </div>
+          </div>
+
+          {customerName && (
+            <div className="mt-6 flex items-center gap-3 rounded-2xl bg-neutral-50 px-4 py-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-200 text-neutral-500">
+                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <div>
+                <p className="font-medium text-black">{customerName}</p>
+                <p className="text-xs text-neutral-500">Customer</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Barcode Section */}
+        <div className="border-t-2 border-dashed border-neutral-200 px-8 py-6 text-center">
+          <svg className="mx-auto h-12 w-full max-w-[240px] text-black" viewBox="0 0 100 40" preserveAspectRatio="none" fill="currentColor">
+            <path d="M0,0 h2 v40 h-2 z M4,0 h1 v40 h-1 z M7,0 h3 v40 h-3 z M12,0 h1 v40 h-1 z M15,0 h4 v40 h-4 z M21,0 h2 v40 h-2 z M25,0 h1 v40 h-1 z M28,0 h3 v40 h-3 z M33,0 h2 v40 h-2 z M37,0 h1 v40 h-1 z M40,0 h4 v40 h-4 z M46,0 h2 v40 h-2 z M50,0 h3 v40 h-3 z M55,0 h1 v40 h-1 z M58,0 h4 v40 h-4 z M64,0 h2 v40 h-2 z M68,0 h1 v40 h-1 z M71,0 h3 v40 h-3 z M76,0 h2 v40 h-2 z M80,0 h4 v40 h-4 z M86,0 h1 v40 h-1 z M89,0 h3 v40 h-3 z M94,0 h2 v40 h-2 z M98,0 h2 v40 h-2 z" />
+          </svg>
+          <button
+            type="button"
+            onClick={onClose}
+            className="pressable mt-6 flex h-11 w-full items-center justify-center rounded-full bg-black px-5 text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
+          >
+            Continue
+          </button>
+        </div>
       </div>
     </div>
   );

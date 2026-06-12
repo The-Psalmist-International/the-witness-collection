@@ -84,6 +84,7 @@ export async function createPreorderRecord(input: NewPreorderInput) {
       id: preorders.id,
       orderReference: preorders.orderReference,
       paymentStatus: preorders.paymentStatus,
+      createdAt: preorders.createdAt,
     });
 
   return record;

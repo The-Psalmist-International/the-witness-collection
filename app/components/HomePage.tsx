@@ -106,9 +106,8 @@ export function HomePage({ productGroups }: HomePageProps) {
         transition={{ duration: 1.2, delay: 3.5, ease: [0.76, 0, 0.24, 1] }}
       >
         <div
-          className={`fixed left-0 right-0 top-0 z-[60] flex flex-col border-b border-gray-100 bg-[#ffffff] transition-transform duration-300 ease-in-out ${
-            showFixedNav ? "translate-y-0" : "-translate-y-full"
-          }`}
+          className={`fixed left-0 right-0 top-0 z-[60] flex flex-col border-b border-gray-100 bg-[#ffffff] transition-transform duration-300 ease-in-out ${showFixedNav ? "translate-y-0" : "-translate-y-full"
+            }`}
         >
           <PromoBanner />
           <div className="flex w-full items-center justify-between px-6 py-4 md:px-12">
@@ -198,7 +197,7 @@ export function HomePage({ productGroups }: HomePageProps) {
                 animate={{ opacity: 1, filter: "blur(0px)" }}
                 transition={{ duration: 0.9, delay: 5.25, ease: "easeOut" }}
               >
-                Discover quality products with fast shipping and secure checkout.
+                Worn with purpose. Carried with conviction.Every piece a declaration.
               </motion.p>
             </motion.div>
           </div>
