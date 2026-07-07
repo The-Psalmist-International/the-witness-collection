@@ -100,6 +100,10 @@ export const products = pgTable("products", {
   hoverImage: text("hover_image"),
   tag: text("tag"),
   sizes: jsonb("sizes").$type<string[]>().notNull().default([]),
+  colors: jsonb("colors")
+    .$type<{ name: string; hex: string }[]>()
+    .notNull()
+    .default([]),
   category: text("category"),
   homeSection: integer("home_section"),
   isActive: boolean("is_active").notNull().default(true),

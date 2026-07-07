@@ -135,6 +135,9 @@ export function OrderInvoiceView({
                   Item
                 </th>
                 <th className="py-3 px-4 text-left text-[10px] font-semibold uppercase tracking-widest text-neutral-400">
+                  Color
+                </th>
+                <th className="py-3 px-4 text-left text-[10px] font-semibold uppercase tracking-widest text-neutral-400">
                   Size
                 </th>
                 <th className="py-3 px-4 text-left text-[10px] font-semibold uppercase tracking-widest text-neutral-400">
@@ -146,12 +149,29 @@ export function OrderInvoiceView({
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-50">
-              {preorder.items.map((item) => (
+              {preorder.items.map((item) => {
+                const colorInfo = item.colors?.find(
+                  (c) => c.hex === item.selectedColor
+                );
+                return (
                 <tr
                   key={`${preorder.id}-${item.productId}-${item.selectedSize}`}
                 >
                   <td className="py-3 px-4 font-medium text-black">
                     {item.name}
+                  </td>
+                  <td className="py-3 px-4 text-neutral-500">
+                    {item.selectedColor ? (
+                      <span className="inline-flex items-center gap-1.5">
+                        <span
+                          className="inline-block h-3 w-3 shrink-0 rounded-full border border-neutral-200"
+                          style={{ backgroundColor: item.selectedColor }}
+                        />
+                        <span>{colorInfo?.name ?? item.selectedColor}</span>
+                      </span>
+                    ) : (
+                      "—"
+                    )}
                   </td>
                   <td className="py-3 px-4 text-neutral-500">
                     {item.selectedSize}
@@ -163,7 +183,8 @@ export function OrderInvoiceView({
                     {item.price}
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

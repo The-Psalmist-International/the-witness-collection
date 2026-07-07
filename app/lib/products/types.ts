@@ -8,6 +8,7 @@ export type DbProduct = {
   hoverImage: string | null;
   tag: string | null;
   sizes: string[];
+  colors: { name: string; hex: string }[];
   category: string | null;
   homeSection: number | null;
   isActive: boolean;
@@ -21,6 +22,7 @@ export type NewProductInput = {
   hoverImage?: string;
   tag?: string;
   sizes?: string[];
+  colors?: { name: string; hex: string }[];
   category?: string;
   homeSection?: number | null;
 };
@@ -34,6 +36,7 @@ export function toProduct(record: DbProduct): Product {
     ...(record.hoverImage ? { hoverImage: record.hoverImage } : {}),
     ...(record.tag ? { tag: record.tag } : {}),
     ...(record.sizes.length > 0 ? { sizes: record.sizes } : {}),
+    ...(record.colors.length > 0 ? { colors: record.colors } : {}),
     ...(record.category ? { category: record.category } : {}),
   };
 }

@@ -93,6 +93,8 @@ function parseItems(value: FormDataEntryValue | null): CartItem[] {
           image,
           selectedSize,
           sizes,
+          selectedColor: "",
+          colors: [],
           quantity,
           ...(category ? { category } : {}),
         };

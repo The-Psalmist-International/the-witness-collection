@@ -147,13 +147,18 @@ export function OrderDetailDrawer({ preorder, onClose }: OrderDetailDrawerProps)
                 <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase tracking-widest text-neutral-500">
                   <tr>
                     <th className="px-4 py-3 font-medium">Product</th>
+                    <th className="px-4 py-3 font-medium">Color</th>
                     <th className="px-4 py-3 font-medium">Size</th>
                     <th className="px-4 py-3 font-medium">Qty</th>
                     <th className="px-4 py-3 font-medium">Price</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100">
-                  {preorder.items.map((item) => (
+                  {preorder.items.map((item) => {
+                    const colorInfo = item.colors?.find(
+                      (c) => c.hex === item.selectedColor
+                    );
+                    return (
                     <tr key={`${preorder.id}-${item.productId}`}>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
@@ -178,6 +183,19 @@ export function OrderDetailDrawer({ preorder, onClose }: OrderDetailDrawerProps)
                         </div>
                       </td>
                       <td className="px-4 py-3 text-neutral-600">
+                        {item.selectedColor ? (
+                          <span className="inline-flex items-center gap-1.5">
+                            <span
+                              className="inline-block h-3.5 w-3.5 shrink-0 rounded-full border border-neutral-200"
+                              style={{ backgroundColor: item.selectedColor }}
+                            />
+                            <span>{colorInfo?.name ?? item.selectedColor}</span>
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-neutral-600">
                         {item.selectedSize}
                       </td>
                       <td className="px-4 py-3 text-neutral-600">
@@ -187,7 +205,8 @@ export function OrderDetailDrawer({ preorder, onClose }: OrderDetailDrawerProps)
                         {item.price}
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

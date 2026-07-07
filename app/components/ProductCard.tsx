@@ -15,6 +15,7 @@ export interface Product {
   hoverImage?: string;
   tag?: string;
   sizes?: string[];
+  colors?: { name: string; hex: string }[];
   category?: string;
 }
 
@@ -71,6 +72,40 @@ function QuantityControls({
   );
 }
 
+function ColorSwatches({
+  availableColors,
+  selectedColor,
+  onSelectColor,
+}: {
+  availableColors: { name: string; hex: string }[];
+  selectedColor?: string;
+  onSelectColor: (hex: string) => void;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      {availableColors.map((color) => (
+        <button
+          key={color.hex}
+          type="button"
+          title={color.name}
+          onClick={() => onSelectColor(color.hex)}
+          aria-pressed={selectedColor === color.hex}
+          className={`pressable h-5 w-5 rounded-full border-2 transition-all ${
+            selectedColor === color.hex
+              ? "border-black scale-110"
+              : "border-neutral-200 hover:border-neutral-400"
+          }`}
+        >
+          <span
+            className="block h-full w-full rounded-full"
+            style={{ backgroundColor: color.hex }}
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function SizeButtons({
   availableSizes,
   selectedSize,
@@ -108,9 +143,12 @@ export function ProductCard({ product }: { product: Product }) {
   const { addItem, items, updateItemQuantity } = useCart();
   const cartItem = items.find((item) => item.productId === product.id);
   const selectedSize = cartItem?.selectedSize;
+  const selectedColor = cartItem?.selectedColor;
   const cartQuantity = cartItem?.quantity ?? 0;
   const hasSizes = Boolean(product.sizes?.length);
   const availableSizes = product.sizes?.length ? product.sizes : ["One size"];
+  const hasColors = Boolean(product.colors?.length);
+  const availableColors = product.colors ?? [];
   const hasAlternateImage = Boolean(product.hoverImage);
   const displayAlternateImage = hasAlternateImage && showAlternateImage;
 
@@ -212,11 +250,20 @@ export function ProductCard({ product }: { product: Product }) {
               </div>
 
               <div className="pointer-events-none absolute inset-0 flex flex-wrap items-center justify-start gap-2 opacity-0 transition-opacity duration-300 ease-out group-hover:pointer-events-auto group-hover:opacity-100">
+                {hasColors ? (
+                  <ColorSwatches
+                    availableColors={availableColors}
+                    selectedColor={selectedColor}
+                    onSelectColor={(hex) =>
+                      addItem(product, selectedSize || availableSizes[0], hex)
+                    }
+                  />
+                ) : null}
                 <SizeButtons
                   product={product}
                   availableSizes={availableSizes}
                   selectedSize={selectedSize}
-                  onSelectSize={(size) => addItem(product, size)}
+                  onSelectSize={(size) => addItem(product, size, selectedColor)}
                 />
                 <QuantityControls
                   productName={product.name}
@@ -243,9 +290,18 @@ export function ProductCard({ product }: { product: Product }) {
               </div>
 
               <div className="pointer-events-none absolute inset-0 flex items-center justify-start gap-2 opacity-0 transition-opacity duration-300 ease-out group-hover:pointer-events-auto group-hover:opacity-100">
+                {hasColors ? (
+                  <ColorSwatches
+                    availableColors={availableColors}
+                    selectedColor={selectedColor}
+                    onSelectColor={(hex) =>
+                      addItem(product, availableSizes[0], hex)
+                    }
+                  />
+                ) : null}
                 <button
                   type="button"
-                  onClick={() => addItem(product, availableSizes[0])}
+                  onClick={() => addItem(product, availableSizes[0], selectedColor)}
                   className="rounded-full border border-neutral-200 px-4 py-2 text-xs font-medium text-black transition-colors hover:border-black active:border-black active:bg-neutral-100"
                 >
                   Pre-order
@@ -277,17 +333,26 @@ export function ProductCard({ product }: { product: Product }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {hasColors ? (
+              <ColorSwatches
+                availableColors={availableColors}
+                selectedColor={selectedColor}
+                onSelectColor={(hex) =>
+                  addItem(product, selectedSize || availableSizes[0], hex)
+                }
+              />
+            ) : null}
             {hasSizes ? (
               <SizeButtons
                 product={product}
                 availableSizes={availableSizes}
                 selectedSize={selectedSize}
-                onSelectSize={(size) => addItem(product, size)}
+                onSelectSize={(size) => addItem(product, size, selectedColor)}
               />
             ) : (
               <button
                 type="button"
-                onClick={() => addItem(product, availableSizes[0])}
+                onClick={() => addItem(product, availableSizes[0], selectedColor)}
                 className="rounded-full border border-neutral-200 px-4 py-2 text-xs font-medium text-black transition-colors active:border-black active:bg-neutral-100"
               >
                 Pre-order

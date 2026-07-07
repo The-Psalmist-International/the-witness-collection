@@ -1,7 +1,8 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { addProduct } from "@/app/admin/actions";
+import { ColorPicker } from "@/app/admin/ColorPicker";
 import { AdminDrawer } from "@/app/admin/AdminDrawer";
 import { PlusIcon } from "@/app/admin/AdminIcons";
 import { ProductImageUpload } from "@/app/admin/ProductImageUpload";
@@ -22,8 +23,10 @@ const HOME_SECTION_OPTIONS = [
 
 export function AddProductDrawer({ isOpen, onClose }: AddProductDrawerProps) {
   const [pending, startTransition] = useTransition();
+  const [colors, setColors] = useState<{ name: string; hex: string }[]>([]);
 
   const handleSubmit = (formData: FormData) => {
+    formData.set("colors", JSON.stringify(colors));
     startTransition(async () => {
       await addProduct(formData);
       onClose();
@@ -140,6 +143,13 @@ export function AddProductDrawer({ isOpen, onClose }: AddProductDrawerProps) {
               placeholder="XS, S, M, L, XL"
               className="h-10 w-full rounded-md border border-neutral-200 px-3 text-sm outline-none focus:border-purple-950"
             />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-medium uppercase tracking-widest text-neutral-500">
+              Colors
+            </label>
+            <ColorPicker value={colors} onChange={setColors} />
           </div>
 
           <div className="flex flex-col gap-2">

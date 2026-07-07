@@ -104,6 +104,26 @@ export function ProductDetailDrawer({
             <DetailCell label="Sizes" className="col-span-2 sm:col-span-1">
               {product.sizes.length > 0 ? product.sizes.join(", ") : "—"}
             </DetailCell>
+            <DetailCell label="Colors" className="col-span-2 sm:col-span-1">
+              {product.colors.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {product.colors.map((color) => (
+                    <span
+                      key={color.hex}
+                      className="inline-flex items-center gap-1 rounded-full border border-neutral-200 px-2 py-0.5 text-xs"
+                    >
+                      <span
+                        className="inline-block h-3 w-3 shrink-0 rounded-full"
+                        style={{ backgroundColor: color.hex }}
+                      />
+                      {color.name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                "—"
+              )}
+            </DetailCell>
             <DetailCell label="Home section">
               {homeSectionLabel(product.homeSection)}
             </DetailCell>

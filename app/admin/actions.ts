@@ -192,6 +192,7 @@ function parseProductFormData(formData: FormData) {
   const tag = String(formData.get("tag") ?? "").trim();
   const category = String(formData.get("category") ?? "").trim();
   const sizesRaw = String(formData.get("sizes") ?? "").trim();
+  const colorsRaw = String(formData.get("colors") ?? "").trim();
   const homeSectionRaw = String(formData.get("homeSection") ?? "").trim();
 
   if (!name || !price || !image) {
@@ -209,6 +210,22 @@ function parseProductFormData(formData: FormData) {
     ? sizesRaw.split(",").map((size) => size.trim()).filter(Boolean)
     : [];
 
+  const colors: { name: string; hex: string }[] = [];
+  if (colorsRaw) {
+    try {
+      const parsed = JSON.parse(colorsRaw);
+      if (Array.isArray(parsed)) {
+        for (const c of parsed) {
+          if (c.name && c.hex) {
+            colors.push({ name: c.name.trim(), hex: c.hex.trim() });
+          }
+        }
+      }
+    } catch {
+      // ignore invalid JSON
+    }
+  }
+
   const homeSection = homeSectionRaw ? Number(homeSectionRaw) : null;
 
   return {
@@ -219,6 +236,7 @@ function parseProductFormData(formData: FormData) {
     tag: tag || undefined,
     category,
     sizes,
+    colors,
     homeSection:
       homeSection === 1 || homeSection === 2 || homeSection === 3
         ? homeSection
