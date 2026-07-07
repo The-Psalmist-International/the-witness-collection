@@ -529,20 +529,42 @@ export function PublicReceiptView({
                 <thead>
                   <tr>
                     <th>Item</th>
+                    <th>Color</th>
                     <th>Size</th>
                     <th>Qty</th>
                     <th>Price</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {preorder.items.map((item) => (
+                  {preorder.items.map((item) => {
+                    const colorInfo = item.colors?.find(
+                      (c) => c.hex === item.selectedColor
+                    );
+                    return (
                     <tr key={`${preorder.id}-${item.productId}-${item.selectedSize}`}>
                       <td className="item-name">{item.name}</td>
+                      <td className="item-sub">
+                        {item.selectedColor ? (
+                          <span className="inline-flex items-center gap-1.5">
+                            <span
+                              className="inline-block h-3 w-3 shrink-0 rounded-full"
+                              style={{
+                                backgroundColor: item.selectedColor,
+                                border: "1px solid #e5e7eb",
+                              }}
+                            />
+                            <span>{colorInfo?.name ?? item.selectedColor}</span>
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
                       <td className="item-sub">{item.selectedSize}</td>
                       <td className="item-sub">{item.quantity ?? 1}</td>
                       <td>{item.price}</td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

@@ -48,8 +48,9 @@ type CartContextValue = {
   items: CartItem[];
   cartQuantity: number;
   isOpen: boolean;
-  addItem: (product: Product, selectedSize: string) => void;
+  addItem: (product: Product, selectedSize: string, selectedColor?: string) => void;
   updateItemSize: (productId: string, selectedSize: string) => void;
+  updateItemColor: (productId: string, selectedColor: string) => void;
   updateItemQuantity: (productId: string, quantity: number) => void;
   removeItem: (productId: string) => void;
   clearCart: () => void;
@@ -104,6 +105,8 @@ function parseStoredCartItem(value: unknown): CartItem | null {
     image: item.image ?? "",
     selectedSize: item.selectedSize,
     sizes: item.sizes,
+    selectedColor: item.selectedColor ?? "",
+    colors: Array.isArray(item.colors) ? item.colors : [],
     quantity,
     ...(item.category ? { category: item.category } : {}),
   };
@@ -129,6 +132,7 @@ function CartDrawer({
     closeCart,
     removeItem,
     updateItemSize,
+    updateItemColor,
     updateItemQuantity,
   } = useCart();
   const { customer, isAuthenticated, fullName, billingAddress } = useCustomer();
@@ -414,6 +418,26 @@ function CartDrawer({
                             }
                           />
                         </label>
+
+                        {item.colors.length > 0 ? (
+                          <label className="flex items-center gap-2 text-xs text-neutral-500">
+                            Color
+                            <select
+                              value={item.selectedColor}
+                              aria-label={`Select color for ${item.name}`}
+                              onChange={(event) =>
+                                updateItemColor(item.productId, event.target.value)
+                              }
+                              className="h-8 cursor-pointer appearance-none rounded-md border border-neutral-200 bg-white py-0 pl-3 pr-8 text-xs font-medium text-black outline-none transition-colors hover:border-neutral-300 focus:border-black"
+                            >
+                              {item.colors.map((color) => (
+                                <option key={color.hex} value={color.hex}>
+                                  {color.name}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        ) : null}
 
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-neutral-500">Qty</span>
@@ -785,8 +809,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
   }, [hasHydrated, items]);
 
-  const addItem = useCallback((product: Product, selectedSize: string) => {
+  const addItem = useCallback((product: Product, selectedSize: string, selectedColor?: string) => {
     const sizes = product.sizes?.length ? product.sizes : ["One size"];
+    const colors = product.colors ?? [];
+    const colorHex = selectedColor || (colors.length > 0 ? colors[0].hex : "");
 
     setItems((currentItems) => {
       const nextItem: CartItem = {
@@ -796,6 +822,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         image: product.image,
         selectedSize,
         sizes,
+        selectedColor: colorHex,
+        colors,
         quantity: 1,
         ...(product.category ? { category: product.category } : {}),
       };
@@ -814,11 +842,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
 
         const sizeChanged = item.selectedSize !== selectedSize;
+        const colorChanged = item.selectedColor !== colorHex;
 
         return {
           ...item,
           ...nextItem,
-          quantity: sizeChanged ? 1 : item.quantity + 1,
+          quantity: sizeChanged || colorChanged ? 1 : item.quantity + 1,
         };
       });
     });
@@ -831,6 +860,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setItems((currentItems) =>
         currentItems.map((item) =>
           item.productId === productId ? { ...item, selectedSize } : item
+        )
+      );
+    },
+    []
+  );
+
+  const updateItemColor = useCallback(
+    (productId: string, selectedColor: string) => {
+      setItems((currentItems) =>
+        currentItems.map((item) =>
+          item.productId === productId ? { ...item, selectedColor } : item
         )
       );
     },
@@ -893,6 +933,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       isOpen,
       addItem,
       updateItemSize,
+      updateItemColor,
       updateItemQuantity,
       removeItem,
       clearCart,
@@ -905,6 +946,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       isOpen,
       addItem,
       updateItemSize,
+      updateItemColor,
       updateItemQuantity,
       removeItem,
       clearCart,

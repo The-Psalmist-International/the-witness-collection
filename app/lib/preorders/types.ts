@@ -5,6 +5,8 @@ export type CartItem = {
   image: string;
   selectedSize: string;
   sizes: string[];
+  selectedColor: string;
+  colors: { name: string; hex: string }[];
   quantity: number;
   category?: string;
 };

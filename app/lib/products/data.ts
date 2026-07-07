@@ -9,7 +9,7 @@ import {
   type NewProductInput,
 } from "@/app/lib/products/types";
 
-function mapRow(row: typeof products.$inferSelect): DbProduct {
+function   mapRow(row: typeof products.$inferSelect): DbProduct {
   return {
     id: row.id,
     name: row.name,
@@ -18,6 +18,7 @@ function mapRow(row: typeof products.$inferSelect): DbProduct {
     hoverImage: row.hoverImage,
     tag: row.tag,
     sizes: row.sizes ?? [],
+    colors: row.colors ?? [],
     category: row.category,
     homeSection: row.homeSection,
     isActive: row.isActive,
@@ -110,6 +111,7 @@ export async function createProduct(input: NewProductInput) {
       hoverImage: input.hoverImage?.trim() || null,
       tag: input.tag?.trim() || null,
       sizes: input.sizes ?? [],
+      colors: input.colors ?? [],
       category: input.category?.trim() || null,
       homeSection: input.homeSection ?? null,
       sortOrder,
@@ -130,6 +132,7 @@ export async function updateProduct(productId: string, input: NewProductInput) {
       hoverImage: input.hoverImage?.trim() || null,
       tag: input.tag?.trim() || null,
       sizes: input.sizes ?? [],
+      colors: input.colors ?? [],
       category: input.category?.trim() || null,
       homeSection: input.homeSection ?? null,
       updatedAt: new Date(),
