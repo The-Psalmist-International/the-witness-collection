@@ -95,6 +95,9 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           SMTP_FROM_EMAIL: ${{ secrets.SMTP_FROM_EMAIL }}
+          BACHS_SECRET_KEY: ${{ secrets.BACHS_SECRET_KEY }}
+          BACHS_BASE_URL: ${{ secrets.BACHS_BASE_URL }}
+          BACHS_WEBHOOK_SECRET: ${{ secrets.BACHS_WEBHOOK_SECRET }}
 
       - name: Deploy to Vercel
         run: npx vercel@latest deploy --yes ${{ needs.resolve-target.outputs.environment == 'production' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
