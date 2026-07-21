@@ -13,6 +13,7 @@ import { listActiveDiscounts } from "@/app/lib/discounts/data";
 import { createBachsPreorderRecord } from "@/app/lib/preorders/data";
 import { getProductById } from "@/app/lib/products/data";
 import { parsePriceLabel } from "@/app/lib/preorders/utils";
+import { generateOrderReference } from "@/app/lib/payments/reference";
 import { getGhsUsdRate, convertGhsToUsd } from "@/app/lib/forex";
 import type { CartItem } from "@/app/lib/preorders/types";
 
@@ -149,6 +150,8 @@ export async function createBachsCheckout(
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
     "http://localhost:3000";
 
+  const orderReference = generateOrderReference();
+
   try {
     const productCart = await Promise.all(
       items.map(async (item) => {
@@ -168,6 +171,7 @@ export async function createBachsCheckout(
       },
       product_cart: productCart,
       billing_currency: "GHS",
+      reference: orderReference,
       metadata: {
         customer_id: customerSession.userId,
         fulfillment_type: fulfillmentType,
@@ -180,7 +184,7 @@ export async function createBachsCheckout(
           ? { discount_id: pricing.appliedDiscountId }
           : {}),
       },
-      success_url: `${appUrl}/receipt`,
+      success_url: `${appUrl}/receipt?ref=${orderReference}`,
       cancel_url: `${appUrl}/shop`,
     });
 
@@ -200,6 +204,7 @@ export async function createBachsCheckout(
       discountId: pricing.appliedDiscountId ?? undefined,
       totalLabel: pricing.totalLabel,
       bachsCheckoutId: checkout.checkout_id,
+      orderReference,
     });
 
     if (pricing.appliedDiscountId) {

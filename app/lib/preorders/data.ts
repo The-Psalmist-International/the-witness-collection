@@ -72,6 +72,7 @@ export type NewBachsPreorderInput = {
   discountId?: string;
   totalLabel: string;
   bachsCheckoutId: string;
+  orderReference?: string;
 };
 
 export async function createPreorderRecord(input: NewPreorderInput) {
@@ -124,7 +125,7 @@ export async function createBachsPreorderRecord(input: NewBachsPreorderInput) {
       discountCode: input.discountCode || null,
       discountId: input.discountId || null,
       totalLabel: input.totalLabel,
-      orderReference: generateOrderReference(),
+      orderReference: input.orderReference ?? generateOrderReference(),
       paymentStatus: "checkout_pending",
       bachsCheckoutId: input.bachsCheckoutId,
     })
@@ -136,6 +137,21 @@ export async function createBachsPreorderRecord(input: NewBachsPreorderInput) {
     });
 
   return record;
+}
+
+export async function getPreorderByOrderReference(
+  ref: string
+): Promise<Preorder | null> {
+  const [row] = await getDb()
+    .select()
+    .from(preorders)
+    .where(eq(preorders.orderReference, ref))
+    .limit(1);
+
+  if (!row) return null;
+
+  const [enriched] = await enrichPreorders([row]);
+  return enriched ?? null;
 }
 
 export async function getPreorderByBachsCheckoutId(
