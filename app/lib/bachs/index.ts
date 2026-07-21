@@ -1,6 +1,7 @@
 export {
   createCustomer,
   retrieveCustomer,
+  createProduct,
   createCheckoutSession,
   retrieveCheckoutSession,
   retrievePayment,
@@ -15,6 +16,7 @@ export type {
   BachsMoney,
   BachsCustomer,
   BachsCheckoutSession,
+  BachsProduct,
   BachsProductLineItem,
   BachsPayment,
   BachsSubscription,
@@ -22,4 +24,5 @@ export type {
   BachsWebhookEvent,
   CreateCheckoutSessionParams,
   CreateCustomerParams,
+  CreateProductParams,
 } from "./types";
