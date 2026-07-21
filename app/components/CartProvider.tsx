@@ -14,13 +14,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { previewCheckoutPricing } from "@/app/actions/checkout";
 import { createPreorder } from "@/app/actions/preorders";
+import { createBachsCheckout } from "@/app/actions/bachs-checkout";
+import type { BachsCheckoutState } from "@/app/actions/bachs-checkout";
 import { useCustomer } from "@/app/components/CustomerProvider";
 import { CheckoutContactAccordion } from "@/app/components/CheckoutContactAccordion";
-import { CheckoutPaymentTabs } from "@/app/components/CheckoutPaymentTabs";
 import { DiscountAppliedNotice } from "@/app/components/DiscountAppliedNotice";
 import { CartLinePrice } from "@/app/components/ProductPrice";
 import { LocationAutocomplete } from "@/app/components/LocationAutocomplete";
-import { PaymentProofUpload } from "@/app/components/PaymentProofUpload";
 import { PreorderSuccessCelebration } from "@/app/components/PreorderSuccessCelebration";
 import type { Product } from "@/app/components/ProductCard";
 import { SizeSelect } from "@/app/components/SizeSelect";
@@ -29,9 +29,6 @@ import {
   PICKUP_DETAILS,
   type FulfillmentType,
 } from "@/app/lib/preorders/constants";
-import {
-  PAYMENT_INSTRUCTIONS,
-} from "@/app/lib/payments/constants";
 import {
   initialPreorderState,
   type CartItem,
@@ -146,6 +143,8 @@ function CartDrawer({
   const [checkoutStep, setCheckoutStep] = useState<"details" | "payment">(
     "details"
   );
+  const [bachsState, setBachsState] = useState<BachsCheckoutState | null>(null);
+  const [bachsPending, setBachsPending] = useState(false);
 
   useEffect(() => {
     if (!isOpen || items.length === 0) {
@@ -170,11 +169,27 @@ function CartDrawer({
     };
   }, [discountCode, isOpen, items]);
 
-  useEffect(() => {
-    if (state.fieldErrors?.paymentProof) {
-      queueMicrotask(() => setCheckoutStep("payment"));
+  const handleBachsPayment = async (
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    event.preventDefault();
+    const form = event.currentTarget.form;
+    if (!form) return;
+
+    setBachsPending(true);
+    setBachsState(null);
+
+    const formData = new FormData(form);
+    const result = await createBachsCheckout(formData);
+
+    setBachsState(result);
+
+    if (result.ok && result.checkoutUrl) {
+      window.location.href = result.checkoutUrl;
     }
-  }, [state.fieldErrors?.paymentProof]);
+
+    setBachsPending(false);
+  };
 
   const totalLabel = pricing?.totalLabel ?? getTotalLabel(items);
   const subtotalLabel = pricing?.subtotalLabel ?? getTotalLabel(items);
@@ -330,23 +345,16 @@ function CartDrawer({
                     Make payment
                   </h3>
                   <p className="mt-2 text-sm leading-6 text-neutral-500">
-                    Pay {totalLabel} using the details below, then upload your
-                    proof of payment.
+                    You will be redirected to our secure checkout to pay{" "}
+                    {totalLabel}.
                   </p>
                 </div>
 
-                <CheckoutPaymentTabs />
-
-                <ul className="space-y-2 text-sm leading-6 text-neutral-600">
-                  {PAYMENT_INSTRUCTIONS.map((instruction) => (
-                    <li key={instruction} className="flex gap-2">
-                      <span className="text-purple-950">•</span>
-                      <span>{instruction}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <PaymentProofUpload error={state.fieldErrors?.paymentProof} />
+                {bachsState && !bachsState.ok && bachsState.error ? (
+                  <p className="rounded-md bg-red-50 px-3 py-2 text-xs leading-5 text-red-700">
+                    {bachsState.error}
+                  </p>
+                ) : null}
               </div>
             ) : items.length === 0 ? (
               <div className="rounded-md border border-dashed border-neutral-200 px-4 py-10 text-center">
@@ -733,26 +741,31 @@ function CartDrawer({
               </div>
             </div>
             <button
-              type={checkoutStep === "payment" ? "submit" : "button"}
+              type={checkoutStep === "payment" ? "button" : "button"}
               onClick={
-                checkoutStep === "details" ? proceedToPayment : undefined
+                checkoutStep === "details"
+                  ? proceedToPayment
+                  : handleBachsPayment
               }
-              disabled={pending || items.length === 0}
+              disabled={
+                pending || bachsPending || items.length === 0
+              }
               className="pressable flex h-11 w-full items-center justify-center rounded-full bg-black px-5 text-sm font-semibold text-white transition-colors hover:bg-neutral-800 active:bg-neutral-900 disabled:cursor-not-allowed disabled:bg-neutral-300"
             >
-              {pending
-                ? "Submitting..."
+              {bachsPending
+                ? "Redirecting to checkout..."
                 : checkoutStep === "payment"
-                  ? "Submit payment proof"
+                  ? `Pay ${totalLabel}`
                   : "Proceed to payment"}
             </button>
             {checkoutStep === "payment" ? (
               <button
                 type="button"
-                disabled={pending}
+                disabled={bachsPending}
                 onClick={() => {
                   onClearErrors();
                   setCheckoutStep("details");
+                  setBachsState(null);
                 }}
                 className="pressable mt-3 flex h-11 w-full items-center justify-center rounded-full border border-neutral-200 px-5 text-sm font-semibold text-black transition-colors hover:border-black"
               >
