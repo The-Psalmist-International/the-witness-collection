@@ -22,10 +22,13 @@ export type DiscountRecord = {
 export type CheckoutPricing = {
   subtotal: number;
   subtotalLabel: string;
+  subtotalUsd: string;
   discountAmount: number;
   discountLabel: string;
+  discountUsd: string;
   total: number;
   totalLabel: string;
+  totalUsd: string;
   appliedDiscountId: string | null;
   appliedDiscountCode: string | null;
   appliedDiscountName: string | null;

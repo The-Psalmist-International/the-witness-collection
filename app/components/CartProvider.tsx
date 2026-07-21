@@ -345,8 +345,8 @@ function CartDrawer({
                     Make payment
                   </h3>
                   <p className="mt-2 text-sm leading-6 text-neutral-500">
-                    You will be redirected to our secure checkout to pay{" "}
-                    {totalLabel}.
+                    Review your order summary below. You will be redirected to
+                    our secure checkout to complete payment.
                   </p>
                 </div>
 
@@ -354,6 +354,59 @@ function CartDrawer({
                   <p className="rounded-md bg-red-50 px-3 py-2 text-xs leading-5 text-red-700">
                     {bachsState.error}
                   </p>
+                ) : null}
+
+                {pricing ? (
+                  <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+                    <p className="mb-3 text-xs font-medium uppercase tracking-widest text-neutral-500">
+                      Price breakdown
+                    </p>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="text-neutral-600">Subtotal</span>
+                        <div className="text-right">
+                          <span className="font-medium text-black">
+                            {pricing.subtotalLabel}
+                          </span>
+                          {pricing.subtotalUsd ? (
+                            <span className="ml-2 text-xs text-neutral-400">
+                              ({pricing.subtotalUsd})
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                      {pricing.discountAmount > 0 ? (
+                        <div className="flex items-center justify-between text-purple-950">
+                          <span>Discount</span>
+                          <div className="text-right">
+                            <span className="font-medium">
+                              {pricing.discountLabel}
+                            </span>
+                            {pricing.discountUsd ? (
+                              <span className="ml-2 text-xs text-purple-400">
+                                ({pricing.discountUsd})
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      ) : null}
+                      <div className="border-t border-neutral-200 pt-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-black">Total</span>
+                          <div className="text-right">
+                            <span className="text-base font-semibold text-black">
+                              {pricing.totalLabel}
+                            </span>
+                            {pricing.totalUsd ? (
+                              <span className="ml-2 text-xs text-neutral-400">
+                                ({pricing.totalUsd})
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 ) : null}
               </div>
             ) : items.length === 0 ? (
@@ -719,25 +772,44 @@ function CartDrawer({
                   message={`${pricing?.appliedDiscountName} applied automatically`}
                 />
               ) : null}
-              {hasDiscount ? (
-                <>
-                  <div className="flex items-center justify-between">
-                    <span className="text-neutral-500">Subtotal</span>
-                    <span className="text-neutral-400 line-through">
-                      {subtotalLabel}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-purple-950">
-                    <span>Discount</span>
-                    <span>{discountLabel}</span>
-                  </div>
-                </>
-              ) : null}
               <div className="flex items-center justify-between">
-                <span className="text-neutral-500">Total</span>
-                <span className="text-base font-medium text-black">
-                  {totalLabel}
-                </span>
+                <span className="text-neutral-500">Subtotal</span>
+                <div className="text-right">
+                  <span className={hasDiscount ? "text-neutral-400 line-through" : "text-black"}>
+                    {subtotalLabel}
+                  </span>
+                  {pricing?.subtotalUsd ? (
+                    <span className="ml-2 text-xs text-neutral-400">
+                      ({pricing.subtotalUsd})
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+              {hasDiscount ? (
+                <div className="flex items-center justify-between text-purple-950">
+                  <span>Discount</span>
+                  <div className="text-right">
+                    <span>{discountLabel}</span>
+                    {pricing?.discountUsd ? (
+                      <span className="ml-2 text-xs text-purple-400">
+                        ({pricing.discountUsd})
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
+              <div className="flex items-center justify-between border-t border-neutral-100 pt-2">
+                <span className="font-medium text-black">Total</span>
+                <div className="text-right">
+                  <span className="text-base font-semibold text-black">
+                    {totalLabel}
+                  </span>
+                  {pricing?.totalUsd ? (
+                    <span className="ml-2 text-xs text-neutral-400">
+                      ({pricing.totalUsd})
+                    </span>
+                  ) : null}
+                </div>
               </div>
             </div>
             <button

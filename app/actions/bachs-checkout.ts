@@ -13,6 +13,7 @@ import { listActiveDiscounts } from "@/app/lib/discounts/data";
 import { createBachsPreorderRecord } from "@/app/lib/preorders/data";
 import { getProductById } from "@/app/lib/products/data";
 import { parsePriceLabel } from "@/app/lib/preorders/utils";
+import { getGhsUsdRate, convertGhsToUsd } from "@/app/lib/forex";
 import type { CartItem } from "@/app/lib/preorders/types";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -26,7 +27,8 @@ export type BachsCheckoutState = {
 };
 
 async function ensureBachsProduct(
-  localProductId: string
+  localProductId: string,
+  ghsToUsdRate: number
 ): Promise<string> {
   const existing = await getProductById(localProductId);
 
@@ -38,13 +40,18 @@ async function ensureBachsProduct(
     return existing.bachsProductId;
   }
 
-  const amount = parsePriceLabel(existing.price).toFixed(2);
+  const ghsAmount = parsePriceLabel(existing.price);
+  const usdAmount = convertGhsToUsd(ghsAmount, ghsToUsdRate);
+  const ghsFormatted = ghsAmount.toFixed(2);
 
   const bachsProduct = await createProduct({
     name: existing.name,
     price: {
-      currency: "GHS",
-      amount,
+      currency: "USD",
+      amount: usdAmount,
+      currency_options: [
+        { currency: "GHS", amount: ghsFormatted },
+      ],
     },
     metadata: {
       local_product_id: localProductId,
@@ -124,10 +131,18 @@ export async function createBachsCheckout(
     return { ok: false, error: "Check the highlighted fields.", fieldErrors };
   }
 
+  let ghsToUsdRate: number;
+  try {
+    ghsToUsdRate = await getGhsUsdRate();
+  } catch {
+    return { ok: false, error: "Could not fetch exchange rate. Try again." };
+  }
+
   const pricing = calculateCheckoutPricing({
     items,
     discounts,
     discountCode: discountCode || null,
+    ghsToUsdRate,
   });
 
   const appUrl =
@@ -137,7 +152,10 @@ export async function createBachsCheckout(
   try {
     const productCart = await Promise.all(
       items.map(async (item) => {
-        const bachsProductId = await ensureBachsProduct(item.productId);
+        const bachsProductId = await ensureBachsProduct(
+          item.productId,
+          ghsToUsdRate
+        );
         return { product_id: bachsProductId, quantity: item.quantity };
       })
     );
@@ -149,6 +167,7 @@ export async function createBachsCheckout(
         phone_number: customerPhone,
       },
       product_cart: productCart,
+      billing_currency: "GHS",
       metadata: {
         customer_id: customerSession.userId,
         fulfillment_type: fulfillmentType,
