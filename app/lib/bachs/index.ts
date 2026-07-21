@@ -22,6 +22,7 @@ export type {
   BachsSubscription,
   BachsRefund,
   BachsWebhookEvent,
+  CurrencyOption,
   CreateCheckoutSessionParams,
   CreateCustomerParams,
   CreateProductParams,

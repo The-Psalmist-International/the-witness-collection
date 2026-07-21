@@ -100,11 +100,17 @@ export type CreateCustomerParams = {
   phone?: string;
 };
 
+export type CurrencyOption = {
+  currency: string;
+  amount: string;
+};
+
 export type CreateProductParams = {
   name: string;
   price: {
     currency: string;
     amount: string;
+    currency_options?: CurrencyOption[];
   };
   metadata?: Record<string, string>;
 };
