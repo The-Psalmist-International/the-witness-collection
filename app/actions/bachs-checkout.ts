@@ -180,7 +180,7 @@ export async function createBachsCheckout(
           ? { discount_id: pricing.appliedDiscountId }
           : {}),
       },
-      success_url: `${appUrl}/receipt?checkout_id={CHECKOUT_ID}`,
+      success_url: `${appUrl}/receipt`,
       cancel_url: `${appUrl}/shop`,
     });
 
