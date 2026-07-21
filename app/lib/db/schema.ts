@@ -18,6 +18,7 @@ export const customers = pgTable("customers", {
   lastName: text("last_name").notNull(),
   phone: text("phone").notNull(),
   billingAddress: text("billing_address"),
+  bachsCustomerId: text("bachs_customer_id"),
   passwordHash: text("password_hash").notNull(),
   status: varchar("status", { length: 16 }).notNull().default("active"),
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -72,6 +73,9 @@ export const preorders = pgTable("preorders", {
   }),
   totalLabel: varchar("total_label", { length: 64 }).notNull(),
   orderReference: varchar("order_reference", { length: 32 }).unique(),
+  bachsCheckoutId: text("bachs_checkout_id"),
+  bachsChargeId: text("bachs_charge_id"),
+  bachsPaymentId: text("bachs_payment_id"),
   paymentStatus: varchar("payment_status", { length: 32 })
     .notNull()
     .default("pending_confirmation"),
