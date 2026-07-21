@@ -8,6 +8,13 @@
       "when": 1784635154134,
       "tag": "0000_material_giant_man",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1784637445772,
+      "tag": "0001_nice_the_leader",
+      "breakpoints": true
     }
   ]
 }

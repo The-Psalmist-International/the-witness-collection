@@ -3,8 +3,10 @@ import type {
   BachsCheckoutSession,
   BachsCustomer,
   BachsPayment,
+  BachsProduct,
   CreateCheckoutSessionParams,
   CreateCustomerParams,
+  CreateProductParams,
 } from "./types";
 
 class BachsApiError extends Error {
@@ -65,6 +67,15 @@ export function createCustomer(params: CreateCustomerParams): Promise<BachsCusto
 
 export function retrieveCustomer(id: string): Promise<BachsCustomer> {
   return request<BachsCustomer>(`/v1/customers/${id}`);
+}
+
+export function createProduct(
+  params: CreateProductParams
+): Promise<BachsProduct> {
+  return request<BachsProduct>("/v1/products", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
 }
 
 export function createCheckoutSession(

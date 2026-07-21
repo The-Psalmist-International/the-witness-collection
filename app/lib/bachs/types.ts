@@ -81,10 +81,32 @@ export type CreateCheckoutSessionParams = {
   expires_in_minutes?: number;
 };
 
+export type BachsProduct = {
+  id: string;
+  name: string;
+  price: {
+    currency: string;
+    amount: string;
+    price_type: "fixed" | "free" | "custom";
+  };
+  status: "active" | "archived";
+  created_at: string;
+  updated_at: string;
+};
+
 export type CreateCustomerParams = {
   email: string;
   name?: string;
   phone?: string;
+};
+
+export type CreateProductParams = {
+  name: string;
+  price: {
+    currency: string;
+    amount: string;
+  };
+  metadata?: Record<string, string>;
 };
 
 export type BachsWebhookEvent = {

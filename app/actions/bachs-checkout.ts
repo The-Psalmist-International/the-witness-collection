@@ -1,13 +1,18 @@
 "use server";
 
-import { createCheckoutSession } from "@/app/lib/bachs/client";
+import { eq } from "drizzle-orm";
+import { createCheckoutSession, createProduct } from "@/app/lib/bachs/client";
 import { requireCustomerSession } from "@/app/lib/customer/auth";
+import { getDb } from "@/app/lib/db";
+import { products } from "@/app/lib/db/schema";
 import {
   calculateCheckoutPricing,
   validateSecretDiscountCode,
 } from "@/app/lib/discounts/pricing";
 import { listActiveDiscounts } from "@/app/lib/discounts/data";
 import { createBachsPreorderRecord } from "@/app/lib/preorders/data";
+import { getProductById } from "@/app/lib/products/data";
+import { parsePriceLabel } from "@/app/lib/preorders/utils";
 import type { CartItem } from "@/app/lib/preorders/types";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -19,6 +24,40 @@ export type BachsCheckoutState = {
   error?: string;
   fieldErrors?: Record<string, string>;
 };
+
+async function ensureBachsProduct(
+  localProductId: string
+): Promise<string> {
+  const existing = await getProductById(localProductId);
+
+  if (!existing) {
+    throw new Error(`Product '${localProductId}' not found in local database.`);
+  }
+
+  if (existing.bachsProductId) {
+    return existing.bachsProductId;
+  }
+
+  const amount = parsePriceLabel(existing.price).toFixed(2);
+
+  const bachsProduct = await createProduct({
+    name: existing.name,
+    price: {
+      currency: "GHS",
+      amount,
+    },
+    metadata: {
+      local_product_id: localProductId,
+    },
+  });
+
+  await getDb()
+    .update(products)
+    .set({ bachsProductId: bachsProduct.id, updatedAt: new Date() })
+    .where(eq(products.id, localProductId));
+
+  return bachsProduct.id;
+}
 
 export async function createBachsCheckout(
   formData: FormData
@@ -96,16 +135,20 @@ export async function createBachsCheckout(
     "http://localhost:3000";
 
   try {
+    const productCart = await Promise.all(
+      items.map(async (item) => {
+        const bachsProductId = await ensureBachsProduct(item.productId);
+        return { product_id: bachsProductId, quantity: item.quantity };
+      })
+    );
+
     const checkout = await createCheckoutSession({
       customer: {
         email: customerEmail,
         name: customerName,
         phone_number: customerPhone,
       },
-      product_cart: items.map((item) => ({
-        product_id: item.productId,
-        quantity: item.quantity,
-      })),
+      product_cart: productCart,
       metadata: {
         customer_id: customerSession.userId,
         fulfillment_type: fulfillmentType,

@@ -100,6 +100,7 @@ export const products = pgTable("products", {
   id: varchar("id", { length: 32 }).primaryKey(),
   name: text("name").notNull(),
   price: varchar("price", { length: 32 }).notNull(),
+  bachsProductId: text("bachs_product_id"),
   image: text("image").notNull(),
   hoverImage: text("hover_image"),
   tag: text("tag"),
