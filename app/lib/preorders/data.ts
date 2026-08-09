@@ -54,7 +54,25 @@ export type NewPreorderInput = {
   discountCode?: string;
   discountId?: string;
   totalLabel: string;
-  paymentProofUrl: string;
+  paymentProofUrl?: string;
+};
+
+export type NewBachsPreorderInput = {
+  customerId: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  fulfillmentType: "pickup" | "delivery";
+  customerLocation?: string;
+  customerNotes?: string;
+  items: CartItem[];
+  subtotalLabel: string;
+  discountLabel?: string;
+  discountCode?: string;
+  discountId?: string;
+  totalLabel: string;
+  bachsCheckoutId: string;
+  orderReference?: string;
 };
 
 export async function createPreorderRecord(input: NewPreorderInput) {
@@ -77,8 +95,8 @@ export async function createPreorderRecord(input: NewPreorderInput) {
       totalLabel: input.totalLabel,
       orderReference: generateOrderReference(),
       paymentStatus: "pending_confirmation",
-      paymentProofUrl: input.paymentProofUrl,
-      paymentProofUploadedAt: now,
+      paymentProofUrl: input.paymentProofUrl ?? null,
+      paymentProofUploadedAt: input.paymentProofUrl ? now : null,
     })
     .returning({
       id: preorders.id,
@@ -88,6 +106,95 @@ export async function createPreorderRecord(input: NewPreorderInput) {
     });
 
   return record;
+}
+
+export async function createBachsPreorderRecord(input: NewBachsPreorderInput) {
+  const [record] = await getDb()
+    .insert(preorders)
+    .values({
+      customerId: input.customerId,
+      customerName: input.customerName,
+      customerEmail: input.customerEmail,
+      customerPhone: input.customerPhone,
+      fulfillmentType: input.fulfillmentType,
+      customerLocation: input.customerLocation || null,
+      customerNotes: input.customerNotes || null,
+      items: input.items,
+      subtotalLabel: input.subtotalLabel,
+      discountLabel: input.discountLabel || null,
+      discountCode: input.discountCode || null,
+      discountId: input.discountId || null,
+      totalLabel: input.totalLabel,
+      orderReference: input.orderReference ?? generateOrderReference(),
+      paymentStatus: "checkout_pending",
+      bachsCheckoutId: input.bachsCheckoutId,
+    })
+    .returning({
+      id: preorders.id,
+      orderReference: preorders.orderReference,
+      paymentStatus: preorders.paymentStatus,
+      createdAt: preorders.createdAt,
+    });
+
+  return record;
+}
+
+export async function getPreorderByOrderReference(
+  ref: string
+): Promise<Preorder | null> {
+  const [row] = await getDb()
+    .select()
+    .from(preorders)
+    .where(eq(preorders.orderReference, ref))
+    .limit(1);
+
+  if (!row) return null;
+
+  const [enriched] = await enrichPreorders([row]);
+  return enriched ?? null;
+}
+
+export async function getPreorderByBachsCheckoutId(
+  bachsCheckoutId: string
+): Promise<Preorder | null> {
+  const [row] = await getDb()
+    .select()
+    .from(preorders)
+    .where(eq(preorders.bachsCheckoutId, bachsCheckoutId))
+    .limit(1);
+
+  if (!row) return null;
+
+  const [enriched] = await enrichPreorders([row]);
+  return enriched ?? null;
+}
+
+export async function confirmPreorderByBachsCharge(
+  preorderId: string,
+  bachsChargeId: string,
+  bachsPaymentId: string
+) {
+  const now = new Date();
+  const invoiceNumber = generateInvoiceNumber();
+
+  const [row] = await getDb()
+    .update(preorders)
+    .set({
+      paymentStatus: "confirmed",
+      bachsChargeId,
+      bachsPaymentId,
+      paymentConfirmedAt: now,
+      invoiceNumber,
+      invoiceIssuedAt: now,
+      updatedAt: now,
+    })
+    .where(eq(preorders.id, preorderId))
+    .returning();
+
+  if (!row) return null;
+
+  const [enriched] = await enrichPreorders([row]);
+  return enriched ?? null;
 }
 
 export async function listPreorders(): Promise<Preorder[]> {

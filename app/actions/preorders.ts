@@ -168,12 +168,12 @@ export async function createPreorder(
   const paymentProofEntry = formData.get("paymentProof");
   let paymentProofUrl = "";
 
-  if (!(paymentProofEntry instanceof File) || paymentProofEntry.size === 0) {
-    fieldErrors.paymentProof = "Upload proof of payment before submitting.";
-  } else if (!ALLOWED_PAYMENT_PROOF_TYPES.has(paymentProofEntry.type)) {
-    fieldErrors.paymentProof = "Upload a JPG, PNG, WEBP, GIF, or PDF file.";
-  } else if (paymentProofEntry.size > MAX_PAYMENT_PROOF_BYTES) {
-    fieldErrors.paymentProof = "Payment proof must be 5 MB or smaller.";
+  if (paymentProofEntry instanceof File && paymentProofEntry.size > 0) {
+    if (!ALLOWED_PAYMENT_PROOF_TYPES.has(paymentProofEntry.type)) {
+      fieldErrors.paymentProof = "Upload a JPG, PNG, WEBP, GIF, or PDF file.";
+    } else if (paymentProofEntry.size > MAX_PAYMENT_PROOF_BYTES) {
+      fieldErrors.paymentProof = "Payment proof must be 5 MB or smaller.";
+    }
   }
 
   const discounts = await listActiveDiscounts();
@@ -205,7 +205,7 @@ export async function createPreorder(
   });
 
   try {
-    if (paymentProofEntry instanceof File) {
+    if (paymentProofEntry instanceof File && paymentProofEntry.size > 0) {
       const buffer = Buffer.from(await paymentProofEntry.arrayBuffer());
       const upload = await uploadPaymentProof({
         buffer,

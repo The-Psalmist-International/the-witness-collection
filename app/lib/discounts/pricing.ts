@@ -1,6 +1,7 @@
 import type { DiscountRecord, ProductDisplayPricing } from "@/app/lib/discounts/types";
 import type { CartItem } from "@/app/lib/preorders/types";
 import { formatGhsAmount, parsePriceLabel } from "@/app/lib/preorders/utils";
+import { convertGhsToUsd, formatUsd } from "@/app/lib/forex";
 
 function getLineSubtotal(item: CartItem) {
   return parsePriceLabel(item.price) * item.quantity;
@@ -85,10 +86,12 @@ export function calculateCheckoutPricing({
   items,
   discounts,
   discountCode,
+  ghsToUsdRate,
 }: {
   items: CartItem[];
   discounts: DiscountRecord[];
   discountCode?: string | null;
+  ghsToUsdRate?: number;
 }) {
   const subtotal = getCartSubtotal(items);
   const productDiscounts = getProductDiscounts(discounts);
@@ -156,9 +159,24 @@ export function calculateCheckoutPricing({
     ? secretDiscount.id
     : orderDiscount?.id ?? null;
 
+  const usd = ghsToUsdRate
+    ? {
+        subtotalUsd: formatUsd(convertGhsToUsd(subtotal, ghsToUsdRate)),
+        discountUsd: discountAmount > 0
+          ? `-${formatUsd(convertGhsToUsd(discountAmount, ghsToUsdRate))}`
+          : formatUsd(0),
+        totalUsd: formatUsd(convertGhsToUsd(total, ghsToUsdRate)),
+      }
+    : {
+        subtotalUsd: "",
+        discountUsd: "",
+        totalUsd: "",
+      };
+
   return {
     subtotal,
     subtotalLabel: formatGhsAmount(subtotal),
+    ...usd,
     discountAmount,
     discountLabel:
       discountAmount > 0 ? `-${formatGhsAmount(discountAmount)}` : formatGhsAmount(0),

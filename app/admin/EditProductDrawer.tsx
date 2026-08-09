@@ -7,7 +7,7 @@ import { AdminDrawer } from "@/app/admin/AdminDrawer";
 import { PencilIcon } from "@/app/admin/AdminIcons";
 import { ProductImageUpload } from "@/app/admin/ProductImageUpload";
 import { StyledSelect } from "@/app/components/StyledSelect";
-import { PRODUCT_CATEGORIES } from "@/app/lib/products/categories";
+import { PRODUCT_CATEGORIES, APPAREL_SUBCATEGORIES } from "@/app/lib/products/categories";
 import type { DbProduct } from "@/app/lib/products/types";
 
 type EditProductDrawerProps = {
@@ -27,6 +27,7 @@ export function EditProductDrawer({ product, onClose }: EditProductDrawerProps) 
   const [colors, setColors] = useState<{ name: string; hex: string }[]>(
     product?.colors ?? []
   );
+  const [category, setCategory] = useState(product?.category ?? "");
 
   if (!product) {
     return null;
@@ -130,12 +131,34 @@ export function EditProductDrawer({ product, onClose }: EditProductDrawerProps) 
             required
             defaultValue={product.category ?? ""}
             placeholder="Select a category"
-            options={PRODUCT_CATEGORIES.map((category) => ({
-              value: category,
-              label: category,
+            options={PRODUCT_CATEGORIES.map((cat) => ({
+              value: cat,
+              label: cat,
             }))}
+            onChange={(value) => setCategory(value)}
           />
         </div>
+
+        {category === "Apparel" ? (
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor={`edit-productSubcategory-${product.id}`}
+              className="text-xs font-medium uppercase tracking-widest text-neutral-500"
+            >
+              Subcategory
+            </label>
+            <StyledSelect
+              id={`edit-productSubcategory-${product.id}`}
+              name="subcategory"
+              defaultValue={product.subcategory ?? ""}
+              placeholder="Select a subcategory"
+              options={APPAREL_SUBCATEGORIES.map((sub) => ({
+                value: sub,
+                label: sub,
+              }))}
+            />
+          </div>
+        ) : null}
 
         <div className="flex flex-col gap-2">
           <label

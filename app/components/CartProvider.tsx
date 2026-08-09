@@ -14,13 +14,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { previewCheckoutPricing } from "@/app/actions/checkout";
 import { createPreorder } from "@/app/actions/preorders";
+import { createBachsCheckout } from "@/app/actions/bachs-checkout";
+import type { BachsCheckoutState } from "@/app/actions/bachs-checkout";
 import { useCustomer } from "@/app/components/CustomerProvider";
 import { CheckoutContactAccordion } from "@/app/components/CheckoutContactAccordion";
-import { CheckoutPaymentTabs } from "@/app/components/CheckoutPaymentTabs";
 import { DiscountAppliedNotice } from "@/app/components/DiscountAppliedNotice";
 import { CartLinePrice } from "@/app/components/ProductPrice";
 import { LocationAutocomplete } from "@/app/components/LocationAutocomplete";
-import { PaymentProofUpload } from "@/app/components/PaymentProofUpload";
 import { PreorderSuccessCelebration } from "@/app/components/PreorderSuccessCelebration";
 import type { Product } from "@/app/components/ProductCard";
 import { SizeSelect } from "@/app/components/SizeSelect";
@@ -29,9 +29,6 @@ import {
   PICKUP_DETAILS,
   type FulfillmentType,
 } from "@/app/lib/preorders/constants";
-import {
-  PAYMENT_INSTRUCTIONS,
-} from "@/app/lib/payments/constants";
 import {
   initialPreorderState,
   type CartItem,
@@ -52,6 +49,7 @@ type CartContextValue = {
   updateItemSize: (productId: string, selectedSize: string) => void;
   updateItemColor: (productId: string, selectedColor: string) => void;
   updateItemQuantity: (productId: string, quantity: number) => void;
+  updateItemDesignNotes: (productId: string, designNotes: string) => void;
   removeItem: (productId: string) => void;
   clearCart: () => void;
   openCart: () => void;
@@ -109,6 +107,8 @@ function parseStoredCartItem(value: unknown): CartItem | null {
     colors: Array.isArray(item.colors) ? item.colors : [],
     quantity,
     ...(item.category ? { category: item.category } : {}),
+    ...(item.subcategory ? { subcategory: item.subcategory } : {}),
+    ...(item.designNotes ? { designNotes: item.designNotes } : {}),
   };
 }
 
@@ -134,6 +134,7 @@ function CartDrawer({
     updateItemSize,
     updateItemColor,
     updateItemQuantity,
+    updateItemDesignNotes,
   } = useCart();
   const { customer, isAuthenticated, fullName, billingAddress } = useCustomer();
   const [fulfillmentType, setFulfillmentType] =
@@ -146,6 +147,8 @@ function CartDrawer({
   const [checkoutStep, setCheckoutStep] = useState<"details" | "payment">(
     "details"
   );
+  const [bachsState, setBachsState] = useState<BachsCheckoutState | null>(null);
+  const [bachsPending, setBachsPending] = useState(false);
 
   useEffect(() => {
     if (!isOpen || items.length === 0) {
@@ -170,11 +173,27 @@ function CartDrawer({
     };
   }, [discountCode, isOpen, items]);
 
-  useEffect(() => {
-    if (state.fieldErrors?.paymentProof) {
-      queueMicrotask(() => setCheckoutStep("payment"));
+  const handleBachsPayment = async (
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    event.preventDefault();
+    const form = event.currentTarget.form;
+    if (!form) return;
+
+    setBachsPending(true);
+    setBachsState(null);
+
+    const formData = new FormData(form);
+    const result = await createBachsCheckout(formData);
+
+    setBachsState(result);
+
+    if (result.ok && result.checkoutUrl) {
+      window.location.href = result.checkoutUrl;
     }
-  }, [state.fieldErrors?.paymentProof]);
+
+    setBachsPending(false);
+  };
 
   const totalLabel = pricing?.totalLabel ?? getTotalLabel(items);
   const subtotalLabel = pricing?.subtotalLabel ?? getTotalLabel(items);
@@ -330,23 +349,69 @@ function CartDrawer({
                     Make payment
                   </h3>
                   <p className="mt-2 text-sm leading-6 text-neutral-500">
-                    Pay {totalLabel} using the details below, then upload your
-                    proof of payment.
+                    Review your order summary below. You will be redirected to
+                    our secure checkout to complete payment.
                   </p>
                 </div>
 
-                <CheckoutPaymentTabs />
+                {bachsState && !bachsState.ok && bachsState.error ? (
+                  <p className="rounded-md bg-red-50 px-3 py-2 text-xs leading-5 text-red-700">
+                    {bachsState.error}
+                  </p>
+                ) : null}
 
-                <ul className="space-y-2 text-sm leading-6 text-neutral-600">
-                  {PAYMENT_INSTRUCTIONS.map((instruction) => (
-                    <li key={instruction} className="flex gap-2">
-                      <span className="text-purple-950">•</span>
-                      <span>{instruction}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <PaymentProofUpload error={state.fieldErrors?.paymentProof} />
+                {pricing ? (
+                  <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+                    <p className="mb-3 text-xs font-medium uppercase tracking-widest text-neutral-500">
+                      Price breakdown
+                    </p>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="text-neutral-600">Subtotal</span>
+                        <div className="text-right">
+                          <span className="font-medium text-black">
+                            {pricing.subtotalLabel}
+                          </span>
+                          {pricing.subtotalUsd ? (
+                            <span className="ml-2 text-xs text-neutral-400">
+                              ({pricing.subtotalUsd})
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                      {pricing.discountAmount > 0 ? (
+                        <div className="flex items-center justify-between text-purple-950">
+                          <span>Discount</span>
+                          <div className="text-right">
+                            <span className="font-medium">
+                              {pricing.discountLabel}
+                            </span>
+                            {pricing.discountUsd ? (
+                              <span className="ml-2 text-xs text-purple-400">
+                                ({pricing.discountUsd})
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      ) : null}
+                      <div className="border-t border-neutral-200 pt-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-black">Total</span>
+                          <div className="text-right">
+                            <span className="text-base font-semibold text-black">
+                              {pricing.totalLabel}
+                            </span>
+                            {pricing.totalUsd ? (
+                              <span className="ml-2 text-xs text-neutral-400">
+                                ({pricing.totalUsd})
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ) : items.length === 0 ? (
               <div className="rounded-md border border-dashed border-neutral-200 px-4 py-10 text-center">
@@ -472,10 +537,31 @@ function CartDrawer({
                               +
                             </button>
                           </div>
-                        </div>
                       </div>
                     </div>
-                  </article>
+
+                    {item.subcategory === "Hoodie" ? (
+                      <div className="mt-3 flex flex-col gap-1.5">
+                        <label
+                          htmlFor={`designNotes-${item.productId}`}
+                          className="text-[11px] font-medium uppercase tracking-wider text-neutral-500"
+                        >
+                          Design description
+                        </label>
+                        <textarea
+                          id={`designNotes-${item.productId}`}
+                          rows={2}
+                          value={item.designNotes ?? ""}
+                          onChange={(event) =>
+                            updateItemDesignNotes(item.productId, event.target.value)
+                          }
+                          placeholder="Describe your hoodie design..."
+                          className="w-full rounded-md border border-neutral-200 px-3 py-2 text-xs outline-none transition-colors focus:border-black resize-none"
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                </article>
                 ))}
               </div>
             )}
@@ -711,48 +797,72 @@ function CartDrawer({
                   message={`${pricing?.appliedDiscountName} applied automatically`}
                 />
               ) : null}
-              {hasDiscount ? (
-                <>
-                  <div className="flex items-center justify-between">
-                    <span className="text-neutral-500">Subtotal</span>
-                    <span className="text-neutral-400 line-through">
-                      {subtotalLabel}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-purple-950">
-                    <span>Discount</span>
-                    <span>{discountLabel}</span>
-                  </div>
-                </>
-              ) : null}
               <div className="flex items-center justify-between">
-                <span className="text-neutral-500">Total</span>
-                <span className="text-base font-medium text-black">
-                  {totalLabel}
-                </span>
+                <span className="text-neutral-500">Subtotal</span>
+                <div className="text-right">
+                  <span className={hasDiscount ? "text-neutral-400 line-through" : "text-black"}>
+                    {subtotalLabel}
+                  </span>
+                  {pricing?.subtotalUsd ? (
+                    <span className="ml-2 text-xs text-neutral-400">
+                      ({pricing.subtotalUsd})
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+              {hasDiscount ? (
+                <div className="flex items-center justify-between text-purple-950">
+                  <span>Discount</span>
+                  <div className="text-right">
+                    <span>{discountLabel}</span>
+                    {pricing?.discountUsd ? (
+                      <span className="ml-2 text-xs text-purple-400">
+                        ({pricing.discountUsd})
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
+              <div className="flex items-center justify-between border-t border-neutral-100 pt-2">
+                <span className="font-medium text-black">Total</span>
+                <div className="text-right">
+                  <span className="text-base font-semibold text-black">
+                    {totalLabel}
+                  </span>
+                  {pricing?.totalUsd ? (
+                    <span className="ml-2 text-xs text-neutral-400">
+                      ({pricing.totalUsd})
+                    </span>
+                  ) : null}
+                </div>
               </div>
             </div>
             <button
-              type={checkoutStep === "payment" ? "submit" : "button"}
+              type={checkoutStep === "payment" ? "button" : "button"}
               onClick={
-                checkoutStep === "details" ? proceedToPayment : undefined
+                checkoutStep === "details"
+                  ? proceedToPayment
+                  : handleBachsPayment
               }
-              disabled={pending || items.length === 0}
+              disabled={
+                pending || bachsPending || items.length === 0
+              }
               className="pressable flex h-11 w-full items-center justify-center rounded-full bg-black px-5 text-sm font-semibold text-white transition-colors hover:bg-neutral-800 active:bg-neutral-900 disabled:cursor-not-allowed disabled:bg-neutral-300"
             >
-              {pending
-                ? "Submitting..."
+              {bachsPending
+                ? "Redirecting to checkout..."
                 : checkoutStep === "payment"
-                  ? "Submit payment proof"
+                  ? `Pay ${totalLabel}`
                   : "Proceed to payment"}
             </button>
             {checkoutStep === "payment" ? (
               <button
                 type="button"
-                disabled={pending}
+                disabled={bachsPending}
                 onClick={() => {
                   onClearErrors();
                   setCheckoutStep("details");
+                  setBachsState(null);
                 }}
                 className="pressable mt-3 flex h-11 w-full items-center justify-center rounded-full border border-neutral-200 px-5 text-sm font-semibold text-black transition-colors hover:border-black"
               >
@@ -826,6 +936,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         colors,
         quantity: 1,
         ...(product.category ? { category: product.category } : {}),
+        ...(product.subcategory ? { subcategory: product.subcategory } : {}),
       };
 
       const existingItem = currentItems.find(
@@ -897,6 +1008,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const updateItemDesignNotes = useCallback(
+    (productId: string, designNotes: string) => {
+      setItems((currentItems) =>
+        currentItems.map((item) =>
+          item.productId === productId ? { ...item, designNotes } : item
+        )
+      );
+    },
+    []
+  );
+
   const removeItem = useCallback((productId: string) => {
     setItems((currentItems) =>
       currentItems.filter((item) => item.productId !== productId)
@@ -939,6 +1061,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       clearCart,
       openCart,
       closeCart,
+      updateItemDesignNotes,
     }),
     [
       items,
@@ -948,6 +1071,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       updateItemSize,
       updateItemColor,
       updateItemQuantity,
+      updateItemDesignNotes,
       removeItem,
       clearCart,
       openCart,
