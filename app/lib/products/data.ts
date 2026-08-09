@@ -20,6 +20,7 @@ function   mapRow(row: typeof products.$inferSelect): DbProduct {
     sizes: row.sizes ?? [],
     colors: row.colors ?? [],
     category: row.category,
+    subcategory: row.subcategory,
     homeSection: row.homeSection,
     isActive: row.isActive,
     sortOrder: row.sortOrder,
@@ -123,6 +124,7 @@ export async function createProduct(input: NewProductInput) {
       sizes: input.sizes ?? [],
       colors: input.colors ?? [],
       category: input.category?.trim() || null,
+      subcategory: input.subcategory?.trim() || null,
       homeSection: input.homeSection ?? null,
       sortOrder,
       isActive: true,
@@ -144,6 +146,7 @@ export async function updateProduct(productId: string, input: NewProductInput) {
       sizes: input.sizes ?? [],
       colors: input.colors ?? [],
       category: input.category?.trim() || null,
+      subcategory: input.subcategory?.trim() || null,
       homeSection: input.homeSection ?? null,
       updatedAt: new Date(),
     })

@@ -9,6 +9,8 @@ export type CartItem = {
   colors: { name: string; hex: string }[];
   quantity: number;
   category?: string;
+  subcategory?: string;
+  designNotes?: string;
 };
 
 export type CreatePreorderState = {

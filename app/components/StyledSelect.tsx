@@ -14,6 +14,7 @@ type StyledSelectProps = {
   defaultValue?: string;
   placeholder?: string;
   "aria-label"?: string;
+  onChange?: (value: string) => void;
 };
 
 export function StyledSelect({
@@ -24,6 +25,7 @@ export function StyledSelect({
   defaultValue = "",
   placeholder,
   "aria-label": ariaLabel,
+  onChange,
 }: StyledSelectProps) {
   return (
     <div className="relative w-full">
@@ -33,6 +35,7 @@ export function StyledSelect({
         required={required}
         defaultValue={defaultValue}
         aria-label={ariaLabel}
+        onChange={onChange ? (event) => onChange(event.target.value) : undefined}
         className="h-10 w-full cursor-pointer appearance-none rounded-md border border-neutral-200 bg-white py-0 pl-3 pr-10 text-sm font-medium text-black outline-none transition-colors hover:border-neutral-300 focus:border-purple-950"
       >
         {placeholder && (

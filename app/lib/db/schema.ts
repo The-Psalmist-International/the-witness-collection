@@ -110,6 +110,7 @@ export const products = pgTable("products", {
     .notNull()
     .default([]),
   category: text("category"),
+  subcategory: text("subcategory"),
   homeSection: integer("home_section"),
   isActive: boolean("is_active").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),

@@ -7,7 +7,7 @@ import { AdminDrawer } from "@/app/admin/AdminDrawer";
 import { PlusIcon } from "@/app/admin/AdminIcons";
 import { ProductImageUpload } from "@/app/admin/ProductImageUpload";
 import { StyledSelect } from "@/app/components/StyledSelect";
-import { PRODUCT_CATEGORIES } from "@/app/lib/products/categories";
+import { PRODUCT_CATEGORIES, APPAREL_SUBCATEGORIES } from "@/app/lib/products/categories";
 
 type AddProductDrawerProps = {
   isOpen: boolean;
@@ -24,6 +24,7 @@ const HOME_SECTION_OPTIONS = [
 export function AddProductDrawer({ isOpen, onClose }: AddProductDrawerProps) {
   const [pending, startTransition] = useTransition();
   const [colors, setColors] = useState<{ name: string; hex: string }[]>([]);
+  const [category, setCategory] = useState("");
 
   const handleSubmit = (formData: FormData) => {
     formData.set("colors", JSON.stringify(colors));
@@ -112,8 +113,29 @@ export function AddProductDrawer({ isOpen, onClose }: AddProductDrawerProps) {
                 value: category,
                 label: category,
               }))}
+              onChange={(value) => setCategory(value)}
             />
           </div>
+
+          {category === "Apparel" ? (
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="productSubcategory"
+                className="text-xs font-medium uppercase tracking-widest text-neutral-500"
+              >
+                Subcategory
+              </label>
+              <StyledSelect
+                id="productSubcategory"
+                name="subcategory"
+                placeholder="Select a subcategory"
+                options={APPAREL_SUBCATEGORIES.map((sub) => ({
+                  value: sub,
+                  label: sub,
+                }))}
+              />
+            </div>
+          ) : null}
 
           <div className="flex flex-col gap-2">
             <label

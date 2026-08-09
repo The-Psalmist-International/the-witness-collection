@@ -24,6 +24,7 @@ export function ShopPageClient({ products }: { products: Product[] }) {
       const haystack = [
         product.name,
         product.category,
+        product.subcategory,
         product.tag,
         product.price,
       ]

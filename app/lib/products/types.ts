@@ -10,6 +10,7 @@ export type DbProduct = {
   sizes: string[];
   colors: { name: string; hex: string }[];
   category: string | null;
+  subcategory: string | null;
   homeSection: number | null;
   isActive: boolean;
   sortOrder: number;
@@ -24,6 +25,7 @@ export type NewProductInput = {
   sizes?: string[];
   colors?: { name: string; hex: string }[];
   category?: string;
+  subcategory?: string;
   homeSection?: number | null;
 };
 
@@ -38,5 +40,6 @@ export function toProduct(record: DbProduct): Product {
     ...(record.sizes.length > 0 ? { sizes: record.sizes } : {}),
     ...(record.colors.length > 0 ? { colors: record.colors } : {}),
     ...(record.category ? { category: record.category } : {}),
+    ...(record.subcategory ? { subcategory: record.subcategory } : {}),
   };
 }

@@ -100,6 +100,7 @@ export function ProductDetailDrawer({
             <DetailCell label="Category">
               {product.category || "—"}
             </DetailCell>
+            <DetailCell label="Subcategory">{product.subcategory || "—"}</DetailCell>
             <DetailCell label="Tag">{product.tag || "—"}</DetailCell>
             <DetailCell label="Sizes" className="col-span-2 sm:col-span-1">
               {product.sizes.length > 0 ? product.sizes.join(", ") : "—"}
