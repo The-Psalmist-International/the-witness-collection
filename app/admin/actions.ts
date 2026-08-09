@@ -191,6 +191,7 @@ function parseProductFormData(formData: FormData) {
   const hoverImage = String(formData.get("hoverImage") ?? "").trim();
   const tag = String(formData.get("tag") ?? "").trim();
   const category = String(formData.get("category") ?? "").trim();
+  const subcategory = String(formData.get("subcategory") ?? "").trim();
   const sizesRaw = String(formData.get("sizes") ?? "").trim();
   const colorsRaw = String(formData.get("colors") ?? "").trim();
   const homeSectionRaw = String(formData.get("homeSection") ?? "").trim();
@@ -235,6 +236,7 @@ function parseProductFormData(formData: FormData) {
     hoverImage: hoverImage || undefined,
     tag: tag || undefined,
     category,
+    subcategory: subcategory || undefined,
     sizes,
     colors,
     homeSection:

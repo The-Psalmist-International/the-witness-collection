@@ -49,6 +49,7 @@ type CartContextValue = {
   updateItemSize: (productId: string, selectedSize: string) => void;
   updateItemColor: (productId: string, selectedColor: string) => void;
   updateItemQuantity: (productId: string, quantity: number) => void;
+  updateItemDesignNotes: (productId: string, designNotes: string) => void;
   removeItem: (productId: string) => void;
   clearCart: () => void;
   openCart: () => void;
@@ -106,6 +107,8 @@ function parseStoredCartItem(value: unknown): CartItem | null {
     colors: Array.isArray(item.colors) ? item.colors : [],
     quantity,
     ...(item.category ? { category: item.category } : {}),
+    ...(item.subcategory ? { subcategory: item.subcategory } : {}),
+    ...(item.designNotes ? { designNotes: item.designNotes } : {}),
   };
 }
 
@@ -131,6 +134,7 @@ function CartDrawer({
     updateItemSize,
     updateItemColor,
     updateItemQuantity,
+    updateItemDesignNotes,
   } = useCart();
   const { customer, isAuthenticated, fullName, billingAddress } = useCustomer();
   const [fulfillmentType, setFulfillmentType] =
@@ -533,10 +537,31 @@ function CartDrawer({
                               +
                             </button>
                           </div>
-                        </div>
                       </div>
                     </div>
-                  </article>
+
+                    {item.subcategory === "Hoodie" ? (
+                      <div className="mt-3 flex flex-col gap-1.5">
+                        <label
+                          htmlFor={`designNotes-${item.productId}`}
+                          className="text-[11px] font-medium uppercase tracking-wider text-neutral-500"
+                        >
+                          Design description
+                        </label>
+                        <textarea
+                          id={`designNotes-${item.productId}`}
+                          rows={2}
+                          value={item.designNotes ?? ""}
+                          onChange={(event) =>
+                            updateItemDesignNotes(item.productId, event.target.value)
+                          }
+                          placeholder="Describe your hoodie design..."
+                          className="w-full rounded-md border border-neutral-200 px-3 py-2 text-xs outline-none transition-colors focus:border-black resize-none"
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                </article>
                 ))}
               </div>
             )}
@@ -911,6 +936,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         colors,
         quantity: 1,
         ...(product.category ? { category: product.category } : {}),
+        ...(product.subcategory ? { subcategory: product.subcategory } : {}),
       };
 
       const existingItem = currentItems.find(
@@ -982,6 +1008,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const updateItemDesignNotes = useCallback(
+    (productId: string, designNotes: string) => {
+      setItems((currentItems) =>
+        currentItems.map((item) =>
+          item.productId === productId ? { ...item, designNotes } : item
+        )
+      );
+    },
+    []
+  );
+
   const removeItem = useCallback((productId: string) => {
     setItems((currentItems) =>
       currentItems.filter((item) => item.productId !== productId)
@@ -1024,6 +1061,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       clearCart,
       openCart,
       closeCart,
+      updateItemDesignNotes,
     }),
     [
       items,
@@ -1033,6 +1071,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       updateItemSize,
       updateItemColor,
       updateItemQuantity,
+      updateItemDesignNotes,
       removeItem,
       clearCart,
       openCart,

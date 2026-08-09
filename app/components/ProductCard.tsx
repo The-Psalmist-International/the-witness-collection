@@ -17,6 +17,7 @@ export interface Product {
   sizes?: string[];
   colors?: { name: string; hex: string }[];
   category?: string;
+  subcategory?: string;
 }
 
 const cardVariants = {

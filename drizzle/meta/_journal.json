@@ -15,6 +15,13 @@
       "when": 1784637445772,
       "tag": "0001_nice_the_leader",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786264937666,
+      "tag": "0002_moaning_galactus",
+      "breakpoints": true
     }
   ]
 }
