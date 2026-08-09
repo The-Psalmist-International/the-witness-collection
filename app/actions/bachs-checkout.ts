@@ -146,9 +146,13 @@ export async function createBachsCheckout(
     ghsToUsdRate,
   });
 
-  const appUrl =
+  const rawUrl =
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
     "http://localhost:3000";
+  let appUrl = rawUrl;
+  if (!/^https?:\/\//i.test(appUrl)) {
+    appUrl = `https://${appUrl}`;
+  }
 
   const orderReference = generateOrderReference();
 
