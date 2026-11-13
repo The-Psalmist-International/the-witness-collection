@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BrandLogo } from "./BrandLogo";
@@ -11,11 +11,15 @@ import { useCustomer } from "./CustomerProvider";
 
 export { PromoBanner };
 
+export const SHOP_SEARCH_EVENT = "twc:shop-search";
+
 export function HeaderContent() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const pathname = usePathname();
   
   const { cartQuantity, openCart } = useCart();
   const { isAuthenticated } = useCustomer();
@@ -29,11 +33,38 @@ export function HeaderContent() {
     }
   }, [isSearchOpen]);
 
+  const submitSearch = () => {
+    const query = searchValue.trim();
+
+    if (!query) {
+      searchInputRef.current?.focus();
+      return;
+    }
+
+    if (pathname === "/shop") {
+      window.dispatchEvent(
+        new CustomEvent(SHOP_SEARCH_EVENT, { detail: query })
+      );
+    } else {
+      router.push(`/shop?q=${encodeURIComponent(query)}`);
+    }
+
+    setIsSearchOpen(false);
+    setSearchValue("");
+    searchInputRef.current?.blur();
+  };
+
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const query = searchInputRef.current?.value;
-    if (query) {
-      router.push(`/shop?q=${encodeURIComponent(query)}`);
+    submitSearch();
+  };
+
+  const handleSearchButton = () => {
+    if (!isSearchOpen) {
+      setIsSearchOpen(true);
+    } else if (searchValue.trim()) {
+      submitSearch();
+    } else {
       setIsSearchOpen(false);
     }
   };
@@ -71,6 +102,7 @@ export function HeaderContent() {
         <div className="flex items-center">
           <form
             onSubmit={handleSearch}
+            role="search"
             className={`flex items-center overflow-hidden transition-all duration-300 ease-in-out ${
               isSearchOpen ? "w-[120px] md:w-[200px] opacity-100" : "w-0 opacity-0"
             }`}
@@ -79,15 +111,32 @@ export function HeaderContent() {
               ref={searchInputRef}
               type="search"
               name="q"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  setIsSearchOpen(false);
+                  setSearchValue("");
+                }
+              }}
+              tabIndex={isSearchOpen ? 0 : -1}
+              aria-label="Search products"
+              enterKeyHint="search"
               placeholder="Search..."
               className="w-full bg-neutral-100 rounded-full py-1.5 px-4 text-sm outline-none border border-neutral-200 focus:border-black transition-colors"
             />
           </form>
           <button 
             type="button" 
-            onClick={() => setIsSearchOpen(!isSearchOpen)}
+            onClick={handleSearchButton}
             className="pressable p-2 transition-opacity hover:opacity-50 active:opacity-30"
-            aria-label="Toggle search"
+            aria-label={
+              !isSearchOpen
+                ? "Open search"
+                : searchValue.trim()
+                  ? "Search"
+                  : "Close search"
+            }
           >
             <svg
               width="20"
@@ -99,7 +148,7 @@ export function HeaderContent() {
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              {isSearchOpen ? (
+              {isSearchOpen && !searchValue.trim() ? (
                 <>
                   <line x1="18" y1="6" x2="6" y2="18"></line>
                   <line x1="6" y1="6" x2="18" y2="18"></line>
