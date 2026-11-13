@@ -64,7 +64,7 @@ export default async function AdminPaymentsPage({
             Payments
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-neutral-500">
-            Review payment proofs, confirm payments, and issue invoices.
+            Track payment statuses and review payment proofs awaiting confirmation.
           </p>
         </div>
       </div>
