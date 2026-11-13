@@ -2,6 +2,7 @@ import Link from "next/link";
 import { logoutAdmin } from "@/app/admin/actions/auth";
 import { LogOutIcon } from "@/app/admin/AdminIcons";
 import { AdminNav } from "@/app/admin/AdminNav";
+import { AdminPaymentRefresh } from "@/app/admin/AdminPaymentRefresh";
 import { BrandLogo } from "@/app/components/BrandLogo";
 import type { AdminRole } from "@/app/lib/admin/roles";
 
@@ -14,6 +15,7 @@ type AdminShellProps = {
 export function AdminShell({ email, role, children }: AdminShellProps) {
   return (
     <>
+      <AdminPaymentRefresh />
       <header className="border-b border-neutral-100 bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-5 md:px-10 lg:px-12">
           <BrandLogo

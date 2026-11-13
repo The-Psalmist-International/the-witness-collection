@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { getPaymentStatusLabel } from "@/app/lib/payments/constants";
 
-export function BachsPaymentPending() {
+export function BachsPaymentPending({ status = "checkout_pending" }: { status?: string }) {
   const [seconds, setSeconds] = useState(10);
+  const terminal = ["checkout_failed", "checkout_abandoned", "checkout_expired", "rejected"].includes(status);
 
   useEffect(() => {
+    if (terminal) return;
     if (seconds <= 0) {
       window.location.reload();
       return;
@@ -14,7 +17,7 @@ export function BachsPaymentPending() {
 
     const timer = setTimeout(() => setSeconds((s) => s - 1), 1000);
     return () => clearTimeout(timer);
-  }, [seconds]);
+  }, [seconds, terminal]);
 
   return (
     <div
@@ -68,7 +71,7 @@ export function BachsPaymentPending() {
         </div>
 
         <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: "#111" }}>
-          Payment received
+          {terminal ? getPaymentStatusLabel(status) : "Confirming payment"}
         </h1>
 
         <p
@@ -79,9 +82,7 @@ export function BachsPaymentPending() {
             color: "#6b7280",
           }}
         >
-          Your payment was successful. We are confirming it now — your invoice
-          will appear here automatically. This page will refresh in{" "}
-          <strong>{seconds}</strong> second{seconds !== 1 ? "s" : ""}.
+          {terminal ? "Payment has not been confirmed. View your orders for details." : <>We are waiting for payment confirmation. This page will refresh in <strong>{seconds}</strong> second{seconds !== 1 ? "s" : ""}.</>}
         </p>
 
         <div
@@ -97,7 +98,7 @@ export function BachsPaymentPending() {
           <div
             style={{
               height: "100%",
-              width: `${((10 - seconds) / 10) * 100}%`,
+              width: terminal ? "0%" : `${((10 - seconds) / 10) * 100}%`,
               background: "#7c3aed",
               borderRadius: 2,
               transition: "width 1s linear",

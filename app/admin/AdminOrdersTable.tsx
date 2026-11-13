@@ -60,7 +60,8 @@ export function AdminOrdersTable({
   searchQuery,
   pagination,
 }: AdminOrdersTableProps) {
-  const [selectedOrder, setSelectedOrder] = useState<Preorder | null>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const selectedOrder = preorders.find((order) => order.id === selectedOrderId) ?? null;
 
   if (preorders.length === 0) {
     return (
@@ -126,7 +127,7 @@ export function AdminOrdersTable({
                     <StatusBadge status={preorder.status} />
                   </td>
                   <td className="px-5 py-5">
-                    <ViewButton onClick={() => setSelectedOrder(preorder)} />
+                    <ViewButton onClick={() => setSelectedOrderId(preorder.id)} />
                   </td>
                 </tr>
               ))}
@@ -149,7 +150,7 @@ export function AdminOrdersTable({
                     {formatDate(preorder.createdAt)}
                   </p>
                 </div>
-                <ViewButton onClick={() => setSelectedOrder(preorder)} />
+                <ViewButton onClick={() => setSelectedOrderId(preorder.id)} />
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                 <StatusBadge status={preorder.status} />
@@ -184,7 +185,7 @@ export function AdminOrdersTable({
 
       <OrderDetailDrawer
         preorder={selectedOrder}
-        onClose={() => setSelectedOrder(null)}
+        onClose={() => setSelectedOrderId(null)}
       />
     </>
   );

@@ -1,57 +1,47 @@
-import { getBachsConfig } from "./config";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import type { BachsWebhookEvent } from "./types";
 
 export class BachsWebhookError extends Error {
-  constructor(message: string) {
+  constructor(message: string, public readonly status = 401) {
     super(message);
     this.name = "BachsWebhookError";
   }
 }
 
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) {
-    return false;
-  }
-
-  let result = 0;
-  for (let i = 0; i < a.length; i++) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-
-  return result === 0;
-}
-
 export function verifyWebhookSignature(
   payload: string,
-  signature: string,
-  secret?: string
+  headers: Headers,
+  secret = process.env.BACHS_WEBHOOK_SECRET,
 ): BachsWebhookEvent {
-  const webhookSecret = secret ?? getBachsConfig().webhookSecret;
-
-  if (!webhookSecret) {
-    throw new BachsWebhookError(
-      "BACHS_WEBHOOK_SECRET is not set. Configure it in your environment variables."
-    );
+  if (!secret) throw new Error("BACHS_WEBHOOK_SECRET is not configured.");
+  const v2 = headers.get("x-bachs-signature-v2");
+  const parts = v2?.split(",").map((part) => part.trim());
+  const timestamp = v2
+    ? parts?.find((part) => part.startsWith("t="))?.slice(2)
+    : headers.get("x-bachs-timestamp");
+  const signatures = v2
+    ? parts?.filter((part) => part.startsWith("v1=")).map((part) => part.slice(3))
+    : [headers.get("x-bachs-signature") ?? ""];
+  if (!timestamp || !/^\d+$/.test(timestamp) ||
+      Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) {
+    throw new BachsWebhookError("Missing or expired webhook timestamp");
   }
-
-  const expectedSignature = webhookSecret;
-
-  if (!signature || !timingSafeEqual(signature, expectedSignature)) {
-    throw new BachsWebhookError("Invalid webhook signature");
-  }
-
+  const expected = createHmac("sha256", secret).update(`${timestamp}.${payload}`).digest();
+  const valid = signatures?.some((signature) =>
+    /^[a-fA-F0-9]{64}$/.test(signature) &&
+    timingSafeEqual(Buffer.from(signature, "hex"), expected),
+  );
+  if (!valid) throw new BachsWebhookError("Invalid webhook signature");
   let event: BachsWebhookEvent;
   try {
-    event = JSON.parse(payload) as BachsWebhookEvent;
+    event = JSON.parse(payload);
   } catch {
-    throw new BachsWebhookError("Invalid webhook payload: not valid JSON");
+    throw new BachsWebhookError("Invalid webhook JSON", 400);
   }
-
-  if (!event.type || !event.id) {
-    throw new BachsWebhookError(
-      "Invalid webhook payload: missing 'type' or 'id'"
-    );
+  if (!event || typeof event.id !== "string" || !event.id ||
+      typeof event.type !== "string" || !event.type ||
+      !event.data || typeof event.data !== "object" || Array.isArray(event.data)) {
+    throw new BachsWebhookError("Invalid webhook event", 400);
   }
-
   return event;
 }

@@ -1,4 +1,5 @@
-import { and, count, desc, eq, gte, ilike, inArray, or } from "drizzle-orm";
+import { and, count, desc, eq, gte, ilike, inArray, isNull, ne, or } from "drizzle-orm";
+import type { BachsPaymentStatus } from "@/app/lib/bachs/process-webhook";
 import { ADMIN_PAGE_SIZE } from "@/app/lib/admin/pagination";
 import { getDb } from "@/app/lib/db";
 import { preorders, products, type Preorder } from "@/app/lib/db/schema";
@@ -169,26 +170,32 @@ export async function getPreorderByBachsCheckoutId(
   return enriched ?? null;
 }
 
-export async function confirmPreorderByBachsCharge(
+export async function updateBachsPaymentStatus(
   preorderId: string,
-  bachsChargeId: string,
-  bachsPaymentId: string
+  status: BachsPaymentStatus,
+  bachsChargeId: string | null,
+  bachsPaymentId: string | null
 ) {
   const now = new Date();
-  const invoiceNumber = generateInvoiceNumber();
-
+  // Atomic guard: retries preserve invoices, and late failures cannot undo payment.
   const [row] = await getDb()
     .update(preorders)
     .set({
-      paymentStatus: "confirmed",
-      bachsChargeId,
-      bachsPaymentId,
-      paymentConfirmedAt: now,
-      invoiceNumber,
-      invoiceIssuedAt: now,
+      paymentStatus: status,
+      ...(bachsChargeId ? { bachsChargeId } : {}),
+      ...(bachsPaymentId ? { bachsPaymentId } : {}),
+      ...(status === "confirmed" ? {
+        paymentConfirmedAt: now,
+        invoiceNumber: generateInvoiceNumber(),
+        invoiceIssuedAt: now,
+      } : {}),
       updatedAt: now,
     })
-    .where(eq(preorders.id, preorderId))
+    .where(and(
+      eq(preorders.id, preorderId),
+      ne(preorders.paymentStatus, "confirmed"),
+      ne(preorders.paymentStatus, status),
+    ))
     .returning();
 
   if (!row) return null;
@@ -327,10 +334,7 @@ export async function listPaymentsPaginated(
   query?: string
 ) {
   const searchFilter = buildPreorderSearchFilter(query);
-  const paymentFilter = eq(preorders.paymentStatus, "pending_confirmation");
-  const whereClause = searchFilter
-    ? and(paymentFilter, searchFilter)
-    : paymentFilter;
+  const whereClause = searchFilter;
 
   const totalResult = await getDb()
     .select({ total: count() })
@@ -373,7 +377,11 @@ export async function confirmPreorderPayment(preorderId: string) {
       invoiceIssuedAt: now,
       updatedAt: now,
     })
-    .where(eq(preorders.id, preorderId))
+    .where(and(
+      eq(preorders.id, preorderId),
+      eq(preorders.paymentStatus, "pending_confirmation"),
+      isNull(preorders.bachsCheckoutId),
+    ))
     .returning();
 
   if (!row) {
@@ -393,7 +401,11 @@ export async function rejectPreorderPayment(preorderId: string) {
       paymentStatus: "rejected",
       updatedAt: now,
     })
-    .where(eq(preorders.id, preorderId))
+    .where(and(
+      eq(preorders.id, preorderId),
+      eq(preorders.paymentStatus, "pending_confirmation"),
+      isNull(preorders.bachsCheckoutId),
+    ))
     .returning();
 
   if (!row) {

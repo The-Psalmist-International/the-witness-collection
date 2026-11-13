@@ -5,6 +5,8 @@ export const PAYMENT_STATUSES = [
   "checkout_pending",
   "checkout_expired",
   "checkout_underpaid",
+  "checkout_failed",
+  "checkout_abandoned",
 ] as const;
 
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
@@ -16,6 +18,8 @@ export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
   checkout_pending: "Awaiting checkout payment",
   checkout_expired: "Checkout expired",
   checkout_underpaid: "Checkout underpaid",
+  checkout_failed: "Payment failed",
+  checkout_abandoned: "Payment abandoned",
 };
 
 export const ADMIN_PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
@@ -25,6 +29,8 @@ export const ADMIN_PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
   checkout_pending: "Awaiting payment",
   checkout_expired: "Expired",
   checkout_underpaid: "Underpaid",
+  checkout_failed: "Failed",
+  checkout_abandoned: "Abandoned",
 };
 
 export function getPaymentStatusLabel(status: string) {
