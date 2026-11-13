@@ -43,10 +43,10 @@ export function AdminPaymentsTable({
     return (
       <div className="rounded-md border border-dashed border-neutral-200 bg-white px-6 py-12 text-center">
         <p className="text-sm font-medium text-black">
-          No payments awaiting confirmation.
+          No payments found.
         </p>
         <p className="mt-2 text-sm text-neutral-500">
-          New payment proofs will appear here after checkout.
+          Payments will appear here after checkout.
         </p>
       </div>
     );
@@ -106,6 +106,7 @@ export function AdminPaymentsTable({
             </div>
 
             <div className="mt-5 flex flex-wrap gap-2">
+              {preorder.paymentStatus === "pending_confirmation" && !preorder.bachsCheckoutId ? <>
               <AdminButton
                 disabled={busy}
                 onClick={() => handleConfirm(preorder.id)}
@@ -119,6 +120,7 @@ export function AdminPaymentsTable({
               >
                 Reject
               </AdminButton>
+              </> : null}
               <Link
                 href={`/admin/orders?q=${encodeURIComponent(formatOrderReference(preorder.orderReference, preorder.id))}`}
                 className="inline-flex h-10 items-center rounded-md border border-neutral-200 px-4 text-sm font-medium text-black transition-colors hover:border-black"

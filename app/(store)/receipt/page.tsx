@@ -32,7 +32,7 @@ export default async function BachsReceiptPage({
   }
 
   if (order.paymentStatus !== "confirmed") {
-    return <BachsPaymentPending />;
+    return <BachsPaymentPending status={order.paymentStatus} />;
   }
 
   return (
